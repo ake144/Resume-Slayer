@@ -43,9 +43,9 @@ export function Hero() {
             transition={{ delay: 0.3 }}
             className="flex flex-wrap items-center gap-4 mt-2"
           >
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg shadow-blue-600/20">
+            <a href="/workspace" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg shadow-blue-600/20">
               Start Slaying for Free
-            </button>
+            </a>
             <button className="bg-transparent border border-gray-700 hover:border-gray-500 text-white px-8 py-4 rounded-full font-bold transition-all">
               View Sample Resumes
             </button>

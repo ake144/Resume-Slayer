@@ -14,9 +14,9 @@ export function Footer() {
               Join thousands of candidates who stopped guessing and started getting hired. 
               Start your ATS-optimized journey today.
             </p>
-            <button className="bg-white text-blue-600 hover:bg-gray-100 hover:scale-105 transition-all px-10 py-5 rounded-full font-bold text-lg shadow-2xl shadow-black/20">
+            <a href="/workspace" className="inline-block bg-white text-blue-600 hover:bg-gray-100 hover:scale-105 transition-all px-10 py-5 rounded-full font-bold text-lg shadow-2xl shadow-black/20">
               Start Slaying for Free
-            </button>
+            </a>
             <p className="mt-6 text-blue-200 text-sm">
               No credit card required. Free forever version available.
             </p>
