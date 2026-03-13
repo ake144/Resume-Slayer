@@ -2,10 +2,51 @@
 
 import { motion } from "framer-motion";
 import { UploadCloud, FileText, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Axios from "axios";
 
 export function InputSection() {
   const [activeTab, setActiveTab] = useState("paste");
+  const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [jobURL, setJobURL] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+
+    const submitData = async () => {
+      // Basic validation
+      if (!resumeText) {
+        alert("Please paste your resume text first!");
+        return;
+      }
+      
+      setIsSubmitting(true);
+      try {
+        // Calling our Next.js test integration endpoint
+        const response = await Axios.post("/api/slayer", { 
+          resumeText, 
+          jobDescription, 
+          jobURL 
+        });
+
+        if (response.status === 200) {
+          console.log("Data submitted successfully");
+          const data = response.data;
+          console.log("Response data:", data); 
+          
+          alert(`Integration Success!\nATS Score: ${data.atsScore}%\nCheck console for details.`);
+        } else {
+          console.error("Error submitting data", response);
+          alert("Failed to submit data.");
+        }
+      } catch (error) {
+        console.error("Error submitting data", error);
+        alert("Integration request failed. Make sure the API route exists.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
   return (
     <div className="bg-[#050505] min-h-screen text-white pt-24 pb-12">
@@ -40,6 +81,8 @@ export function InputSection() {
               
               {activeTab === "paste" ? (
                 <textarea 
+                   value={resumeText}
+                  onChange={(e) => setResumeText(e.target.value)}
                   className="w-full h-64 bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                   placeholder="Paste your current resume content here..."
                 />
@@ -63,6 +106,8 @@ export function InputSection() {
                 type="text" 
                 className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all mb-4"
                 placeholder="Paste Job URL (e.g., LinkedIn, Greenhouse, Ashby)"
+                value={jobURL}
+                onChange={(e) => setJobURL(e.target.value)}
               />
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-gray-800"></div>
@@ -72,14 +117,24 @@ export function InputSection() {
               <textarea 
                 className="w-full h-32 mt-4 bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                 placeholder="Paste the job description here..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
               />
             </div>
             
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Slay My Resume
+            <button 
+              onClick={submitData} 
+              disabled={isSubmitting}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              )}
+              {isSubmitting ? "Slaying in Progress..." : "Slay My Resume"}
             </button>
           </div>
 

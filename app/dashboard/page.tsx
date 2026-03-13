@@ -11,11 +11,10 @@ export default function DashboardPage() {
           Your current profile score is in the <span className="text-blue-400 font-semibold">top 2%</span> of applicants in your field.
         </p>
       </div>
-
-      {/* Stats Cards */}
+    
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Total Slays */}
+       
         <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors">
           <div className="absolute top-6 right-6 text-blue-500">
              <Star className="w-5 h-5 fill-blue-500/20" />
@@ -28,7 +27,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Interviews Landed */}
+       
         <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors">
           <div className="absolute top-6 right-6 text-blue-500">
              <CalendarCheck className="w-5 h-5" />

@@ -12,6 +12,16 @@ const features = [
   {
     icon: <Map className="w-5 h-5 text-blue-400" />,
     title: "Skill Gap Roadmaps",
+    description: "generate a c"
+  },
+  {
+    icon: <SplitSquareHorizontal className="w-5 h-5 text-blue-400" />,
+    title: "Cover letter generation",
+    description: "Compare your resume versions side-by-side with real-time scoring to see exactly what changed."
+  },
+  {
+    icon: <Map className="w-5 h-5 text-blue-400" />,
+    title: "Skill Gap Roadmaps",
     description: "Identify missing skills and get a step-by-step plan to bridge the gap and become the perfect candidate."
   },
   {
