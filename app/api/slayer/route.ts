@@ -5,15 +5,21 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    console.log("-----------------------------------------");
-    console.log("INTEGRATION TEST: Backend Received Data");
-    console.log("Resume Text Snippet:", body.resumeText?.substring(0, 50) + "...");
-    console.log("Job Description Snippet:", body.jobDescription?.substring(0, 50) + "...");
-    console.log("Job URL:", body.jobURL);
-    console.log("-----------------------------------------");
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.log("Received POST request to /api/slayer with body:", body);
 
 
-  const response =   await axios.post("http://localhost:8080/api/slayer", body);
+  const response =   await axios.post("http://localhost:8080/api/slayer", body, 
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+   ); 
+
 
    console.log("Response from Java Spring Boot API:", response.data);
 

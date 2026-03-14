@@ -5,7 +5,7 @@ import { UploadCloud, FileText, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Axios from "axios";
 
-export function InputSection() {
+export function InputSection({ token }: { token: string }) {
   const [activeTab, setActiveTab] = useState("paste");
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -28,6 +28,10 @@ export function InputSection() {
           resumeText, 
           jobDescription, 
           jobURL 
+        }, {
+          headers: {
+            'Authorization': `${token}`
+          }
         });
 
         if (response.status === 200) {
