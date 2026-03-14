@@ -20,6 +20,11 @@ export function InputSection({ token }: { token: string }) {
         alert("Please paste your resume text first!");
         return;
       }
+
+      if (!jobDescription && !jobURL) {
+        alert("Please provide a job description or job URL.");
+        return;
+      }
       
       setIsSubmitting(true);
       try {
@@ -38,8 +43,20 @@ export function InputSection({ token }: { token: string }) {
           console.log("Data submitted successfully");
           const data = response.data;
           console.log("Response data:", data); 
+
+          const scoreFromOptimization = data?.optimization?.atsScore;
+          const scoreFromBackend = data?.atsScore;
+          const scoreRaw = scoreFromOptimization ?? scoreFromBackend ?? "N/A";
+          const atsScoreDisplay =
+            typeof scoreRaw === "number"
+              ? `${scoreRaw}%`
+              : String(scoreRaw);
+
+          const warning = data?.optimizationWarning
+            ? `\nNote: ${data.optimizationWarning}`
+            : "";
           
-          alert(`Integration Success!\nATS Score: ${data.atsScore}%\nCheck console for details.`);
+          alert(`Integration Success!\nATS Score: ${atsScoreDisplay}${warning}\nCheck console for details.`);
         } else {
           console.error("Error submitting data", response);
           alert("Failed to submit data.");
