@@ -1,6 +1,38 @@
+'use client';
+
+
 import { Star, CalendarCheck, CheckCircle2, MoreHorizontal, Zap, BarChart3, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { SlayType } from "@/utils/types";
+import { getToken } from "@/utils/common";
+imoprt Link from "next/link";
+
 
 export default function DashboardPage() {
+
+  const [slays, setSlays] = useState<SlayType[]>([]);
+
+  const token = getToken();
+      
+  const slaysData = async ()=>{
+       const response = await fetch("/api/slayer", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+        if(response.ok){
+          const data = await response.json();
+          setSlays(data);
+        }
+         
+  }
+
+
+  useEffect(() => {
+      slaysData();
+    }, []);
+
+
   return (
     <div className="space-y-8 pb-12">
       
@@ -20,7 +52,7 @@ export default function DashboardPage() {
              <Star className="w-5 h-5 fill-blue-500/20" />
           </div>
           <p className="text-sm font-medium text-gray-400 mb-4">Total Slays</p>
-          <h2 className="text-4xl font-bold text-white mb-4">42</h2>
+          <h2 className="text-4xl font-bold text-white mb-4">{slays.length}</h2>
           <div className="flex items-center gap-2 text-sm">
              <TrendingUp className="w-4 h-4 text-green-500" />
              <span className="text-green-500 font-medium">+12% from last month</span>
@@ -73,20 +105,21 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/50">
-                {/* Row 1 */}
+                {slays.map((slay) => (
+                  <Link href={`/slays/${slay.id}`} key={slay.id} className="block">
                 <tr className="hover:bg-white/[0.02] transition-colors group">
                   <td className="px-6 py-5">
-                    <p className="font-medium text-white text-sm">Senior Product Designer</p>
+                    <p className="font-medium text-white text-sm">{slay.jobTitle}</p>
                   </td>
                   <td className="px-6 py-5">
-                    <p className="text-sm text-gray-400">Google Inc.</p>
+                    <p className="text-sm text-gray-400">{slay.company}</p>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 w-[98%] rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
                       </div>
-                      <span className="text-sm font-bold">98%</span>
+                      <span className="text-sm font-bold">{slay.atsScore}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -95,50 +128,9 @@ export default function DashboardPage() {
                     </span>
                   </td>
                 </tr>
-                {/* Row 2 */}
-                <tr className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-6 py-5">
-                    <p className="font-medium text-white text-sm">Staff UX Engineer</p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <p className="text-sm text-gray-400">Airbnb</p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 w-[92%] rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
-                      </div>
-                      <span className="text-sm font-bold">92%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-green-500/10 text-green-500 border border-green-500/20">
-                      Slayed
-                    </span>
-                  </td>
-                </tr>
-                {/* Row 3 */}
-                <tr className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-6 py-5">
-                    <p className="font-medium text-white text-sm">Design Systems Lead</p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <p className="text-sm text-gray-400">Stripe</p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-orange-500 w-[85%] rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
-                      </div>
-                      <span className="text-sm font-bold">85%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                      Optimizing
-                    </span>
-                  </td>
-                </tr>
+                </Link>
+                ))}
+               
               </tbody>
             </table>
           </div>
