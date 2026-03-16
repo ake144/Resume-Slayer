@@ -5,7 +5,7 @@ import { Star, CalendarCheck, CheckCircle2, MoreHorizontal, Zap, BarChart3, Tren
 import { useEffect, useState } from "react";
 import { SlayType } from "@/utils/types";
 import { getToken } from "@/utils/common";
-imoprt Link from "next/link";
+import Link from "next/link";
 
 
 export default function DashboardPage() {
