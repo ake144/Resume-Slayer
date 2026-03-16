@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import { Navbar } from "../components/landing/navbar";
-import { InputSection } from "../components/workspace/input-section";
-import { Workspace as WorkspaceView } from "../components/workspace/workspace";
+import { Navbar } from "../../components/landing/navbar";
+import { InputSection } from "../../components/workspace/input-section";
+import { Workspace as WorkspaceView } from "../../components/workspace/workspace";
 
 export default function WorkspacePage() {
   // In a real app, this would be managed by state/context based on whether the user has submitted data

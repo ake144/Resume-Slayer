@@ -9,4 +9,3 @@ export interface SlayType {
     jobUrl: string;
     trapsFixed?: string;
 }
-}

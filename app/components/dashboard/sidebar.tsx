@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Zap, Map, History, Settings, Plus, Star } from "lucide-react";
+import { LayoutDashboard, Zap, Map, History, Settings, Plus, Star, FileText } from "lucide-react";
 import clsx from "clsx";
 
 export function Sidebar() {
@@ -36,13 +36,17 @@ export function Sidebar() {
           <LayoutDashboard className="w-4 h-4" />
           Dashboard
         </Link>
-        <Link href="/workspace" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/workspace') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
+        <Link href="/dashboard/workspace" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/workspace') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
           <Zap className="w-4 h-4" />
           Slay Mode
         </Link>
         <Link href="/dashboard/roadmap" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/roadmap') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
           <Map className="w-4 h-4" />
           Skill Roadmap
+        </Link>
+        <Link href="/dashboard/cover-letter" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/cover-letter') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
+          <FileText className="w-4 h-4" />
+          Cover Letter Pro
         </Link>
         <Link href="/dashboard/history" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/history') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
           <History className="w-4 h-4" />
@@ -56,7 +60,7 @@ export function Sidebar() {
 
       {/* Bottom Action */}
       <div className="p-4 border-t border-gray-800/50">
-        <Link href="/workspace" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-600/20">
+        <Link href="/dashboard/workspace" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-600/20">
           <Plus className="w-4 h-4" />
           New Slay
         </Link>
