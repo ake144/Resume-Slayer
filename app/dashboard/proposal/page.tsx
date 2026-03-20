@@ -148,7 +148,7 @@ export default function GenericProposalPage() {
         </div>
       </div>
       
-      <style dangerouslySetInlineStyle={{__html: `
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes shimmer {
           100% { transform: translateX(100%); }
         }

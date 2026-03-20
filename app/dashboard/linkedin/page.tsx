@@ -65,32 +65,32 @@ export default function LinkedinDmPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Input Column */}
         <div className="space-y-5">
-          <div className="bg-[#0a0a0c] border border-gray-800 rounded-2xl p-5 shadow-lg">
-            <label className="flex items-center text-sm font-semibold text-gray-300 mb-3">
+          <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
+            <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               <FileText className="w-4 h-4 mr-2 text-blue-500" />
               1. Your Profile / Resume
             </label>
             <textarea
-              className="w-full bg-[#111] border border-gray-800 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
               placeholder="Paste your past experiences, skills, or resume text here..."
               value={formData.resumeText}
               onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
             />
           </div>
 
-          <div className="flex justify-center -my-3 relative z-10">
-             <div className="bg-[#111] border border-gray-800 p-2 rounded-full shadow-xl">
+          <div className="flex justify-center -my-3 relative z-10 w-full hover:scale-110 transition-transform cursor-pointer">
+             <div className="bg-[#0a0a0e] border border-[rgba(255,255,255,0.05)] p-2 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-shadow">
                <ChevronRight className="w-5 h-5 text-gray-500 rotate-90 lg:rotate-0" />
              </div>
           </div>
 
-          <div className="bg-[#0a0a0c] border border-gray-800 rounded-2xl p-5 shadow-lg">
-            <label className="flex items-center text-sm font-semibold text-gray-300 mb-3">
+          <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
+            <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               <Briefcase className="w-4 h-4 mr-2 text-sky-500" />
               2. Target Person / Job Description
             </label>
             <textarea
-              className="w-full bg-[#111] border border-gray-800 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-sky-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
               placeholder="Paste the target job description or details about the person you are messaging..."
               value={formData.jobDescription}
               onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
@@ -100,8 +100,9 @@ export default function LinkedinDmPage() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !formData.resumeText || !formData.jobDescription}
-            className="w-full bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
+            className="w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
           >
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
             {isGenerating ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
@@ -109,7 +110,7 @@ export default function LinkedinDmPage() {
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-5 h-5 transition-transform group-hover:scale-110" />
                 Generate LinkedIn DM
               </>
             )}
@@ -117,11 +118,11 @@ export default function LinkedinDmPage() {
         </div>
 
         {/* Output Column */}
-        <div className="bg-[#0a0a0c] border border-gray-800 rounded-2xl flex flex-col shadow-lg overflow-hidden lg:h-[730px]">
-          <div className="p-5 border-b border-gray-800 bg-[#111] flex items-center justify-between">
+        <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl flex flex-col shadow-lg overflow-hidden lg:h-[750px]">
+          <div className="p-5 border-b border-[rgba(255,255,255,0.05)] bg-[#111] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-blue-400" />
-              <h3 className="font-bold text-white">Your LinkedIn DM</h3>
+              <h3 className="font-bold text-white tracking-wide">Your LinkedIn DM</h3>
             </div>
             {generatedDM && (
               <button
@@ -132,20 +133,39 @@ export default function LinkedinDmPage() {
               </button>
             )}
           </div>
-          <div className="flex-1 p-6 overflow-y-auto w-full">
+          <div className="flex-1 p-6 overflow-y-auto w-full custom-scrollbar">
             {!generatedDM ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4">
-                <MessageSquare className="w-12 h-12 opacity-20" />
-                <p className="text-sm">Your generated LinkedIn DM will appear here.</p>
+                <MessageSquare className="w-16 h-16 opacity-10" />
+                <p className="text-sm font-medium">Your generated LinkedIn DM will appear here.</p>
               </div>
             ) : (
-              <div className="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed font-sans">
+              <div className="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed font-sans bg-[#0c0c10] p-6 rounded-xl border border-[rgba(255,255,255,0.02)]">
                 {generatedDM}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #2a2a3a;
+          border-radius: 10px;
+        }
+      `}} />
     </div>
   );
 }
