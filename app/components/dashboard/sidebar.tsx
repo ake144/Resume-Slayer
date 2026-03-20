@@ -48,6 +48,10 @@ export function Sidebar() {
           <FileText className="w-4 h-4" />
           Cover Letter Pro
         </Link>
+        <Link href="/dashboard/upwork" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/upwork') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
+          <Zap className="w-4 h-4" />
+          Upwork Proposals
+        </Link>
         <Link href="/dashboard/history" className={clsx("flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors", isActive('/dashboard/history') ? "bg-[#111] text-blue-500 border border-gray-800/50" : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent")}>
           <History className="w-4 h-4" />
           History

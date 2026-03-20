@@ -131,16 +131,30 @@ export async function POST(request: Request) {
       ? token
       : `Bearer ${token}`;
 
+    let processedTrapsFixed = Array.isArray(optimizedResult?.trapsFixed) 
+      ? optimizedResult.trapsFixed.map((t: string) => `- ${t}`).join('\n')
+      : (optimizedResult?.trapsFixed || "");
+
+    // Truncate trapsFixed to 255 characters to avoid backend Spring Boot JPA DataIntegrityViolationException on VARCHAR(255)
+    if (processedTrapsFixed.length > 255) {
+      processedTrapsFixed = processedTrapsFixed.substring(0, 252) + "...";
+    }
+
     const backendPayload = {
       ...body,
+      jobTitle: optimizedResult?.jobTitle || body.jobTitle,
       resumeText: optimizedResume,
       optimizedResume,
       originalResume: resumeText,
       jobDescription: effectiveJobDescription,
       atsScore: optimizedResult?.atsScore,
-      trapsFixed: optimizedResult?.trapsFixed,
-      missingSkills: optimizedResult?.missingSkills,
-      roadmap: optimizedResult?.roadmap,
+      trapsFixed: processedTrapsFixed,
+      missingSkills: Array.isArray(optimizedResult?.missingSkills)
+        ? optimizedResult.missingSkills.join(', ')
+        : (optimizedResult?.missingSkills || ""),
+      roadmap: Array.isArray(optimizedResult?.roadmap)
+        ? optimizedResult.roadmap.join('\n')
+        : (optimizedResult?.roadmap || ""),
     };
 
     const response = await axios.post(

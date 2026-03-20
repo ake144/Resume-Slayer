@@ -129,12 +129,25 @@ export default function DashboardPage() {
                   <tr className="border-b border-gray-800/50 text-xs text-gray-500 uppercase tracking-wider bg-[#111]/50">
                     <th className="px-6 py-4 font-semibold">Role & URL</th>
                     <th className="px-6 py-4 font-semibold">Match Score</th>
-                    <th className="px-6 py-4 font-semibold">Date</th>
+                    <th className="px-6 py-4 font-semibold">Issues Fixed</th>
                     <th className="px-6 py-4 font-semibold">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/50">
-                  {slays.slice(0, 5).map((slay) => (
+                  {slays.slice(0, 5).map((slay) => {
+                    let trapsCount = 0;
+                    if (typeof slay.trapsFixed === 'string' && slay.trapsFixed.length > 0) {
+                      try {
+                        const parsed = JSON.parse(slay.trapsFixed);
+                        if (Array.isArray(parsed)) trapsCount = parsed.length;
+                      } catch {
+                        trapsCount = slay.trapsFixed.split(',').length;
+                      }
+                    } else if (Array.isArray(slay.trapsFixed)) {
+                      trapsCount = slay.trapsFixed.length;
+                    }
+
+                    return (
                     <tr key={slay.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-4">
                         <p className="font-medium text-white text-sm truncate max-w-[200px]">{slay.jobTitle}</p>
@@ -143,6 +156,9 @@ export default function DashboardPage() {
                             {slay.jobUrl}
                           </a>
                         )}
+                        <span className="text-[10px] text-gray-500 block mt-1">
+                          {slay.createdAt ? new Date(slay.createdAt).toLocaleDateString() : 'Just now'}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -156,9 +172,9 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-400">
-                          {slay.createdAt ? new Date(slay.createdAt).toLocaleDateString() : 'Just now'}
-                        </span>
+                         <span className="text-sm font-medium text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md">
+                           {trapsCount > 0 ? `${trapsCount} Fixed` : 'No traps'}
+                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <Link href={`/dashboard/slays/${slay.id}`} className="text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
@@ -166,7 +182,8 @@ export default function DashboardPage() {
                         </Link>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             )}

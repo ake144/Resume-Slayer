@@ -63,6 +63,7 @@ const buildLocalOptimization = (resumeText: string, jobDescription: string) => {
   const roadmap = `Week 1: Strengthen ${roadmapFocus[0] || "core role skills"} with 2 guided tutorials and one mini-project.\nWeek 2: Practice ${roadmapFocus[1] || "interview-relevant tooling"} through hands-on implementation and resume bullet updates.\nWeek 3: Build and publish one portfolio artifact using ${roadmapFocus[2] || "the target stack"}; add metrics-focused outcomes to resume.`;
 
   return {
+    jobTitle: "Software Engineer Fallback",
     optimizedResume,
     atsScore,
     trapsFixed,
@@ -127,8 +128,10 @@ const extractJsonObject = (text: string): string => {
 const getPrompt = (resumeText: string, jobDescription: string) => `
 You are an expert ATS Resume Slayer.
 Optimize this resume for the job description below.
+Extract the Job Title from the job description.
 Return valid JSON only (no markdown fences, no explanation text before or after the JSON):
 {
+  "jobTitle": "Extracted Job Title",
   "optimizedResume": "...",
   "atsScore": "92%",
   "trapsFixed": "List of 5 things fixed",

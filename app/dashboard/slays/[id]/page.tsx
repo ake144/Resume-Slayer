@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { getToken } from "@/utils/common";
 import { SlayType } from "@/utils/types";
 import Link from "next/link";
-import { ArrowLeft, Clock, CalendarDays, ExternalLink, RefreshCw, BarChart3, Target, Briefcase, FileText, CheckCircle2, Download } from "lucide-react";
+import { ArrowLeft, Clock, CalendarDays, ExternalLink, RefreshCw, BarChart3, Target, Briefcase, FileText, CheckCircle2, Download, Palette } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 export default function SlayDetailPage() {
@@ -16,6 +16,7 @@ export default function SlayDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'optimized' | 'original' | 'coverLetter'>('optimized');
+  const [activeTemplate, setActiveTemplate] = useState<'modern' | 'executive' | 'sidebar'>('modern');
   
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [generatingCL, setGeneratingCL] = useState(false);
@@ -75,6 +76,86 @@ export default function SlayDetailPage() {
     
     fetchSlay();
   }, [id]);
+
+  const parseResume = (md: string) => {
+    const sections = { header: "", summary: "", experience: "", education: "", skills: "", others: [] as string[] };
+    if (!md) return sections;
+    
+    // Split by Markdown headers (H2)
+    const tokens = md.split(/(?=^##\s)/m);
+    tokens.forEach(token => {
+      if (!token.trim().startsWith('##')) {
+        sections.header += token + '\n';
+        return;
+      }
+      const lowerToken = token.toLowerCase();
+      if (lowerToken.startsWith('## summary') || lowerToken.startsWith('## professional') || lowerToken.startsWith('## profile')) {
+        sections.summary = token;
+      } else if (lowerToken.startsWith('## experience') || lowerToken.startsWith('## work') || lowerToken.startsWith('## employment') || lowerToken.startsWith('## professional experience')) {
+        sections.experience = token;
+      } else if (lowerToken.startsWith('## education')) {
+        sections.education = token;
+      } else if (lowerToken.startsWith('## skill') || lowerToken.startsWith('## core') || lowerToken.startsWith('## technical')) {
+        sections.skills = token;
+      } else {
+        sections.others.push(token);
+      }
+    });
+    return sections;
+  };
+
+  const parsedResume = slay?.optimizedResume ? parseResume(slay.optimizedResume) : null;
+
+  const styleMaps = {
+    modern: {
+      parent: "max-w-[210mm] mx-auto bg-white text-gray-900 shadow-xl resume-document font-sans overflow-hidden",
+      header: {
+        h1: ({node, ...props}: any) => <h1 className="text-4xl font-extrabold text-blue-900 mb-2 tracking-tight" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1 items-center" {...props} />,
+        a: ({node, ...props}: any) => <a className="text-blue-600 hover:underline" {...props} />,
+      },
+      body: {
+        h2: ({node, ...props}: any) => <h2 className="text-lg font-bold text-blue-800 mt-6 mb-3 uppercase tracking-wide border-b-2 border-blue-200 pb-1" {...props} />,
+        h3: ({node, ...props}: any) => <h3 className="text-md font-bold text-gray-900 mt-4 mb-1" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-[13px] text-gray-700 leading-relaxed mb-3" {...props} />,
+        ul: ({node, ...props}: any) => <ul className="list-disc pl-4 mb-4 text-[13px] text-gray-700 space-y-1.5 marker:text-blue-500" {...props} />,
+        li: ({node, ...props}: any) => <li className="pl-1" {...props} />,
+        strong: ({node, ...props}: any) => <strong className="font-semibold text-gray-900" {...props} />,
+      }
+    },
+    executive: {
+      parent: "max-w-[210mm] mx-auto bg-[#faf9f6] text-gray-900 shadow-xl resume-document font-serif overflow-hidden",
+      header: {
+        h1: ({node, ...props}: any) => <h1 className="text-4xl font-normal text-white uppercase tracking-[0.2em] mb-2 text-center" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-sm text-gray-200 flex justify-center flex-wrap gap-x-4 gap-y-1 items-center" {...props} />,
+        a: ({node, ...props}: any) => <a className="text-gray-100 hover:text-white" {...props} />,
+      },
+      body: {
+        h2: ({node, ...props}: any) => <h2 className="text-lg font-bold text-black mt-6 mb-4 uppercase tracking-widest border-b border-black pb-2" {...props} />,
+        h3: ({node, ...props}: any) => <h3 className="text-md font-bold text-gray-900 mt-4 mb-1" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-[13px] text-gray-800 leading-relaxed mb-3" {...props} />,
+        ul: ({node, ...props}: any) => <ul className="list-none pl-0 mb-4 text-[13px] text-gray-800 space-y-2" {...props} />,
+        li: ({node, ...props}: any) => <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:top-0 before:text-gray-400" {...props} />,
+        strong: ({node, ...props}: any) => <strong className="font-bold text-black" {...props} />,
+      }
+    },
+    sidebar: {
+      parent: "max-w-[210mm] mx-auto bg-white text-gray-800 shadow-xl resume-document font-sans flex min-h-[297mm] overflow-hidden",
+      header: {
+        h1: ({node, ...props}: any) => <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight uppercase" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-[13px] text-gray-600 mb-1" {...props} />,
+        a: ({node, ...props}: any) => <a className="text-teal-600 hover:underline" {...props} />,
+      },
+      body: {
+        h2: ({node, ...props}: any) => <h2 className="text-[15px] font-bold text-teal-800 mt-6 mb-3 uppercase tracking-wider border-b border-gray-200 pb-1" {...props} />,
+        h3: ({node, ...props}: any) => <h3 className="text-[14px] font-bold text-gray-800 mt-4 mb-1" {...props} />,
+        p: ({node, ...props}: any) => <p className="text-[13px] text-gray-600 leading-relaxed mb-3" {...props} />,
+        ul: ({node, ...props}: any) => <ul className="list-disc pl-4 mb-4 text-[13px] text-gray-600 space-y-1.5 marker:text-teal-500" {...props} />,
+        li: ({node, ...props}: any) => <li className="pl-1" {...props} />,
+        strong: ({node, ...props}: any) => <strong className="font-semibold text-gray-900" {...props} />,
+      }
+    }
+  };
 
   const handleDownloadPdf = async () => {
     const element = document.getElementById('resume-content');
@@ -256,26 +337,63 @@ export default function SlayDetailPage() {
             ) : activeTab === 'optimized' ? (
               <div 
                 id="resume-content" 
-                className="max-w-[210mm] mx-auto bg-white text-gray-900 p-8 sm:p-12 shadow-lg resume-document font-sans"
+                className={styleMaps[activeTemplate].parent}
               >
-                {slay.optimizedResume ? (
-                  <ReactMarkdown
-                    components={{
-                      h1: ({node, ...props}) => <h1 className="text-3xl font-bold border-b-2 border-gray-800 pb-2 mb-4 uppercase tracking-wider" {...props} />,
-                      h2: ({node, ...props}) => <h2 className="text-xl font-bold text-gray-800 mt-6 mb-3 uppercase tracking-wide border-b border-gray-300 pb-1" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2" {...props} />,
-                      p: ({node, ...props}) => <p className="text-sm text-gray-700 leading-relaxed mb-3" {...props} />,
-                      ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 text-sm text-gray-700 space-y-1 marker:text-gray-500" {...props} />,
-                      ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-4 text-sm text-gray-700 space-y-1" {...props} />,
-                      li: ({node, ...props}) => <li className="pl-1" {...props} />,
-                      strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
-                      a: ({node, ...props}) => <a className="text-blue-600 hover:underline" {...props} />
-                    }}
-                  >
-                    {slay.optimizedResume}
-                  </ReactMarkdown>
+                {parsedResume ? (
+                  <>
+                    {activeTemplate === 'modern' && (
+                      <div className="w-full flex flex-col">
+                        <div className="bg-slate-50 px-10 pt-10 pb-6 border-b-[6px] border-blue-900">
+                          <ReactMarkdown components={styleMaps.modern.header}>{parsedResume.header}</ReactMarkdown>
+                        </div>
+                        <div className="flex gap-10 px-10 py-8">
+                          <div className="flex-[2] space-y-6">
+                            {parsedResume.summary && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.summary}</ReactMarkdown>}
+                            {parsedResume.experience && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.experience}</ReactMarkdown>}
+                          </div>
+                          <div className="flex-[1] space-y-6">
+                            {parsedResume.education && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.education}</ReactMarkdown>}
+                            {parsedResume.skills && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.skills}</ReactMarkdown>}
+                            {parsedResume.others.map((other, i) => <ReactMarkdown key={i} components={styleMaps.modern.body}>{other}</ReactMarkdown>)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {activeTemplate === 'executive' && (
+                      <div className="w-full flex-col flex">
+                        <div className="bg-[#1e2329] px-10 pt-10 pb-8 shadow-sm">
+                          <ReactMarkdown components={styleMaps.executive.header}>{parsedResume.header}</ReactMarkdown>
+                        </div>
+                        <div className="flex gap-8 px-10 py-8">
+                          <div className="w-[60%] space-y-6">
+                             {parsedResume.summary && <ReactMarkdown components={styleMaps.executive.body}>{parsedResume.summary}</ReactMarkdown>}
+                             {parsedResume.experience && <ReactMarkdown components={styleMaps.executive.body}>{parsedResume.experience}</ReactMarkdown>}
+                             {parsedResume.others.map((other, i) => <ReactMarkdown key={i} components={styleMaps.executive.body}>{other}</ReactMarkdown>)}
+                          </div>
+                          <div className="w-[40%] space-y-6 bg-gray-100/50 p-6 rounded border border-gray-200 h-max">
+                             {parsedResume.education && <ReactMarkdown components={styleMaps.executive.body}>{parsedResume.education}</ReactMarkdown>}
+                             {parsedResume.skills && <ReactMarkdown components={styleMaps.executive.body}>{parsedResume.skills}</ReactMarkdown>}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {activeTemplate === 'sidebar' && (
+                      <div className="w-full flex min-h-full">
+                        <div className="w-[35%] bg-[#f7f9fa] border-r border-gray-200 px-6 py-10 flex flex-col gap-6">
+                          <ReactMarkdown components={styleMaps.sidebar.header}>{parsedResume.header}</ReactMarkdown>
+                          {parsedResume.skills && <ReactMarkdown components={styleMaps.sidebar.body}>{parsedResume.skills}</ReactMarkdown>}
+                          {parsedResume.education && <ReactMarkdown components={styleMaps.sidebar.body}>{parsedResume.education}</ReactMarkdown>}
+                        </div>
+                        <div className="w-[65%] px-8 py-10 space-y-6">
+                           {parsedResume.summary && <ReactMarkdown components={styleMaps.sidebar.body}>{parsedResume.summary}</ReactMarkdown>}
+                           {parsedResume.experience && <ReactMarkdown components={styleMaps.sidebar.body}>{parsedResume.experience}</ReactMarkdown>}
+                           {parsedResume.others.map((other, i) => <ReactMarkdown key={i} components={styleMaps.sidebar.body}>{other}</ReactMarkdown>)}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="text-gray-500 italic">No optimized resume data available.</div>
+                  <div className="text-gray-500 italic p-12">No optimized resume data available.</div>
                 )}
               </div>
             ) : (
@@ -294,11 +412,58 @@ export default function SlayDetailPage() {
                 <CheckCircle2 className="w-5 h-5 text-green-400 mr-2" />
                 <h3 className="font-semibold text-white">Traps Fixed</h3>
               </div>
-              <p className="text-sm text-gray-400 whitespace-pre-wrap">
-                {slay.trapsFixed}
-              </p>
+              <ul className="text-sm text-gray-400 space-y-2 list-disc pl-4">
+                {(() => {
+                  try {
+                    let parsed: string[] = [];
+                    if (typeof slay.trapsFixed === 'string') {
+                      parsed = JSON.parse(slay.trapsFixed);
+                      if (Array.isArray(parsed)) {
+                        return parsed.map((trap: string, i: number) => <li key={i}>{trap}</li>);
+                      }
+                    } else if (Array.isArray(slay.trapsFixed)) {
+                      return slay.trapsFixed.map((trap: string, i: number) => <li key={i}>{trap}</li>);
+                    }
+                  } catch {
+                    if (typeof slay.trapsFixed === 'string') {
+                      return slay.trapsFixed.split(',').map((t, i) => <li key={i}>{t.replace(/[\[\]"]/g, '').trim()}</li>);
+                    }
+                  }
+                  return <li>{slay.trapsFixed}</li>;
+                })()}
+              </ul>
             </div>
           )}
+
+          {slay.roadMap?.roadMapText && (
+             <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
+                 <div className="flex items-center mb-4">
+                   <Target className="w-5 h-5 text-orange-400 mr-2" />
+                   <h3 className="font-semibold text-white">Learning Roadmap</h3>
+                 </div>
+                 <div className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">
+                   {slay.roadMap.roadMapText}
+                 </div>
+             </div>
+          )}
+
+          <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
+            <div className="flex items-center mb-4">
+              <Palette className="w-5 h-5 text-pink-400 mr-2" />
+              <h3 className="font-semibold text-white">Resume Template</h3>
+            </div>
+            <div className="space-y-3">
+              <select 
+                value={activeTemplate}
+                onChange={(e) => setActiveTemplate(e.target.value as any)}
+                className="w-full bg-[#131315] border border-gray-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-pink-500/50 outline-none transition-all"
+              >
+                <option value="modern">Modern (Split Layout)</option>
+                <option value="executive">Executive (Centered Header)</option>
+                <option value="sidebar">Creative (Left Sidebar)</option>
+              </select>
+            </div>
+          </div>
 
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center mb-4">

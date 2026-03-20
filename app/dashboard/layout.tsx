@@ -1,11 +1,16 @@
+
 import { Sidebar } from "../components/dashboard/sidebar";
 import { Header } from "../components/dashboard/header";
+import { getToken } from "@/utils/common";
+import LoginPage from "../(auth)/login/page";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans antialiased flex">
       <Sidebar />
