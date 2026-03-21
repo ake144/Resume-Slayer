@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileText, Sparkles, Copy, Mail, RefreshCw, Briefcase, ChevronRight, Send } from "lucide-react";
+import { useResumeStore } from "@/store/useResumeStore";
 
 export default function GenericProposalPage() {
+  const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [formData, setFormData] = useState({
     resumeText: "",
     jobDescription: "",
@@ -11,6 +13,20 @@ export default function GenericProposalPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      setFormData(prev => ({ ...prev, resumeText: storedResume }));
+      mounted.current = true;
+    }
+  }, [storedResume]);
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setFormData({ ...formData, resumeText: val });
+    setStoredResume(val);
+  };
 
   const handleGenerate = async () => {
     if (!formData.resumeText.trim() || !formData.jobDescription.trim()) {
@@ -74,7 +90,7 @@ export default function GenericProposalPage() {
               className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
               placeholder="Paste your past experiences, skills, or resume text here..."
               value={formData.resumeText}
-              onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+              onChange={handleResumeChange}
             />
           </div>
 

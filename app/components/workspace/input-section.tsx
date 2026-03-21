@@ -2,15 +2,31 @@
 
 import { motion } from "framer-motion";
 import { UploadCloud, FileText, CheckCircle2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Axios from "axios";
+import { useResumeStore } from "@/store/useResumeStore";
 
 export function InputSection({ token }: { token: string }) {
   const [activeTab, setActiveTab] = useState("paste");
+  const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [jobURL, setJobURL] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Hydration sync
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      setResumeText(storedResume);
+      mounted.current = true;
+    }
+  }, [storedResume]);
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setResumeText(e.target.value);
+    setStoredResume(e.target.value);
+  };
 
 
 
@@ -103,7 +119,7 @@ export function InputSection({ token }: { token: string }) {
               {activeTab === "paste" ? (
                 <textarea 
                    value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
+                  onChange={handleResumeChange}
                   className="w-full h-64 bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                   placeholder="Paste your current resume content here..."
                 />
