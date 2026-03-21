@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
       try{
+         
+        const page = req.nextUrl.searchParams.get("page") || "1";
+        const size = req.nextUrl.searchParams.get("size") || "10";
 
           const token = req.headers.get("Authorization");
 
@@ -14,13 +17,15 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
           }
 
-            const response = await axios.get("http://localhost:8080/api/slayer",
-               {
-                headers:{
-                  Authorization: `${token}`
-                }
-               }
-            );
+            const response = await axios.get("http://localhost:8080/api/slayer", {
+              params: {
+                page,
+                size
+              },
+              headers: {
+                Authorization: `${token}`
+              }
+            });
 
             if(response.status === 200){
                   return NextResponse.json(response.data, { status: 200 });
@@ -135,14 +140,9 @@ export async function POST(request: Request) {
       ? optimizedResult.trapsFixed.map((t: string) => `- ${t}`).join('\n')
       : (optimizedResult?.trapsFixed || "");
 
-    // Truncate trapsFixed to 255 characters to avoid backend Spring Boot JPA DataIntegrityViolationException on VARCHAR(255)
-    if (processedTrapsFixed.length > 255) {
-      processedTrapsFixed = processedTrapsFixed.substring(0, 252) + "...";
-    }
-
     const backendPayload = {
       ...body,
-      jobTitle: optimizedResult?.jobTitle || body.jobTitle,
+      jobTitle: optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job",
       resumeText: optimizedResume,
       optimizedResume,
       originalResume: resumeText,

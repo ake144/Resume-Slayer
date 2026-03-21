@@ -18,16 +18,21 @@ export default function DashboardPage() {
         return;
       }
 
-      const response = await fetch("/api/slayer", {
+      const response = await fetch(`/api/slayer?page=${0}&size=${8}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
-        const sortedData = data.sort((a: any, b: any) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        console.log("Raw slays data:", data);
+        // const sortedData = data.sort((a: any, b: any) => 
+        //   new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        // );
+
+        const sortedData = data.content || [];
+
+        console.log("Fetched slays:", sortedData);
         setSlays(sortedData);
       }
     } catch (error) {

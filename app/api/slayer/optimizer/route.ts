@@ -134,7 +134,7 @@ Return valid JSON only (no markdown fences, no explanation text before or after 
   "jobTitle": "Extracted Job Title",
   "optimizedResume": "...",
   "atsScore": "92%",
-  "trapsFixed": "List of 5 things fixed",
+  "trapsFixed": ["Fixed formatting", "Added keywords"],
   "missingSkills": ["Python", "AWS"],
   "roadmap": "Week 1: ...\\nWeek 2: ...\\nFree courses: ..."
 }
