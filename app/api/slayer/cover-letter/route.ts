@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+
+    const apiKey = (process.env.OPENROUTER_API_KEY ?? "")
+    .trim()
+    .replace(/^['\"]|['\"]$/g, "");
+
+
   try {
     const { resumeText, jobDescription } = await req.json();
 
@@ -24,14 +30,18 @@ Job Description:
 ${jobDescription}
 `;
 
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
+      // signal: constroller.signal,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.GROK_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
+        "X-OpenRouter-Title": process.env.OPENROUTER_APP_NAME || "resume-slayer",
+
       },
       body: JSON.stringify({
-        model: process.env.GROK_MODEL || "grok-beta",
+        model: process.env.OPENROUTER_MODEL || "openrouter/free",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),

@@ -25,14 +25,14 @@ export default function DashboardPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log("Raw slays data:", data);
+        // console.log("Raw slays data:", data);
         // const sortedData = data.sort((a: any, b: any) => 
         //   new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         // );
 
         const sortedData = data.content || [];
 
-        console.log("Fetched slays:", sortedData);
+        // console.log("Fetched slays:", sortedData);
         setSlays(sortedData);
       }
     } catch (error) {
