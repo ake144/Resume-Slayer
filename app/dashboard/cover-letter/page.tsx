@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileText, Sparkles, Copy, Mail, RefreshCw, Briefcase, ChevronRight } from "lucide-react";
-import Axios from "axios";
+import { useResumeStore } from "@/store/useResumeStore";
 
 export default function CoverLetterPage() {
+  const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [formData, setFormData] = useState({
     resumeText: "",
     jobDescription: "",
@@ -12,6 +13,20 @@ export default function CoverLetterPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedLetter, setGeneratedLetter] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      setFormData(prev => ({ ...prev, resumeText: storedResume }));
+      mounted.current = true;
+    }
+  }, [storedResume]);
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setFormData({ ...formData, resumeText: val });
+    setStoredResume(val);
+  };
 
   const handleGenerate = async () => {
     if (!formData.resumeText.trim() || !formData.jobDescription.trim()) {
@@ -55,12 +70,11 @@ export default function CoverLetterPage() {
     <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-500 mb-2">
-          Cover Letter Pro
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 mb-2">
+          Cover Letter Generator
         </h1>
         <p className="text-gray-400 text-sm max-w-2xl">
-          Instantly generate a highly persuasive, perfectly tailored cover letter using AI. 
-          Just paste your resume and the target job description below.
+          Instantly craft a compelling, ATS-friendly cover letter personalized to your target job description. Stand out effortlessly.
         </p>
       </div>
 
@@ -70,13 +84,13 @@ export default function CoverLetterPage() {
           <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
             <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               <FileText className="w-4 h-4 mr-2 text-purple-500" />
-              1. Paste Your Resume
+              1. Your Resume / Profile
             </label>
             <textarea
               className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
-              placeholder="Paste your full resume text or latest work experience here..."
+              placeholder="Paste your past experiences, skills, or full resume text here..."
               value={formData.resumeText}
-              onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+              onChange={handleResumeChange}
             />
           </div>
 
@@ -88,12 +102,12 @@ export default function CoverLetterPage() {
 
           <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
             <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
-              <Briefcase className="w-4 h-4 mr-2 text-indigo-500" />
-              2. Paste Job Description
+              <Briefcase className="w-4 h-4 mr-2 text-pink-500" />
+              2. Target Job Description
             </label>
             <textarea
-              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
-              placeholder="Paste the target job description, requirements, or link context here..."
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
+              placeholder="Paste the details of the job listing you are applying for..."
               value={formData.jobDescription}
               onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
             />
@@ -102,13 +116,13 @@ export default function CoverLetterPage() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !formData.resumeText || !formData.jobDescription}
-            className="w-full relative group overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center justify-center gap-2"
+            className="w-full relative group overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center justify-center gap-2"
           >
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
             {isGenerating ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
-                Drafting your Cover Letter...
+                Drafting Perfect Cover Letter...
               </>
             ) : (
               <>

@@ -141,12 +141,11 @@ export async function POST(request: Request) {
       : (optimizedResult?.trapsFixed || "");
 
     const backendPayload = {
-      ...body,
-      jobTitle: optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job",
-      resumeText: optimizedResume,
-      optimizedResume,
-      originalResume: resumeText,
+      resumeText: resumeText,
       jobDescription: effectiveJobDescription,
+      jobTitle: optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job",
+      jobUrl: body.jobURL || body.jobUrl || "",
+      optimizedResume: optimizedResume,
       atsScore: optimizedResult?.atsScore,
       trapsFixed: processedTrapsFixed,
       missingSkills: Array.isArray(optimizedResult?.missingSkills)

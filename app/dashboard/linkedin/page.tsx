@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, Sparkles, Copy, Mail, RefreshCw, Briefcase, ChevronRight, MessageSquare } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { FileText, Sparkles, Copy, MessageSquare, RefreshCw, Briefcase, ChevronRight, UserPlus } from "lucide-react";
+import { useResumeStore } from "@/store/useResumeStore";
 
-export default function LinkedinDmPage() {
+export default function LinkedInDMPage() {
+  const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [formData, setFormData] = useState({
     resumeText: "",
-    jobDescription: "",
+    targetProfile: "",
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDM, setGeneratedDM] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      setFormData(prev => ({ ...prev, resumeText: storedResume }));
+      mounted.current = true;
+    }
+  }, [storedResume]);
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setFormData({ ...formData, resumeText: val });
+    setStoredResume(val);
+  };
+
   const handleGenerate = async () => {
-    if (!formData.resumeText.trim() || !formData.jobDescription.trim()) {
-      alert("Please provide both your profile/resume and the target's info/job description.");
+    if (!formData.resumeText.trim() || !formData.targetProfile.trim()) {
+      alert("Please provide both your profile/resume and the target's profile context.");
       return;
     }
 
@@ -32,7 +48,7 @@ export default function LinkedinDmPage() {
         const data = await response.json();
         setGeneratedDM(data.dm);
       } else {
-        alert("Failed to generate LinkedIn DM. Please try again.");
+        alert("Failed to generate DM. Please try again.");
       }
     } catch (error) {
       console.error(error);
@@ -54,11 +70,11 @@ export default function LinkedinDmPage() {
     <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-sky-500 mb-2">
-          LinkedIn DM Generator
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-500 mb-2">
+          LinkedIn Outbound DM
         </h1>
         <p className="text-gray-400 text-sm max-w-2xl">
-          Craft the perfect outreach message for recruiters, hiring managers, or potential clients. Keep it concise, professional, and optimized for high response rates.
+          Instantly draft a personalized, engaging LinkedIn direct message tailored for networking, prospecting, or recruiters.
         </p>
       </div>
 
@@ -68,13 +84,13 @@ export default function LinkedinDmPage() {
           <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
             <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               <FileText className="w-4 h-4 mr-2 text-blue-500" />
-              1. Your Profile / Resume
+              1. Your Profile / Context
             </label>
             <textarea
               className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
-              placeholder="Paste your past experiences, skills, or resume text here..."
+              placeholder="Paste your LinkedIn intro, current role, or resume text here..."
               value={formData.resumeText}
-              onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+              onChange={handleResumeChange}
             />
           </div>
 
@@ -86,32 +102,32 @@ export default function LinkedinDmPage() {
 
           <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
             <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
-              <Briefcase className="w-4 h-4 mr-2 text-sky-500" />
-              2. Target Person / Job Description
+              <UserPlus className="w-4 h-4 mr-2 text-cyan-500" />
+              2. Target Profile / Intent
             </label>
             <textarea
-              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-sky-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
-              placeholder="Paste the target job description or details about the person you are messaging..."
-              value={formData.jobDescription}
-              onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
+              placeholder="Paste the target person's headline, recent post, or your specific goal for outreach..."
+              value={formData.targetProfile}
+              onChange={(e) => setFormData({ ...formData, targetProfile: e.target.value })}
             />
           </div>
 
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || !formData.resumeText || !formData.jobDescription}
-            className="w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
+            disabled={isGenerating || !formData.resumeText || !formData.targetProfile}
+            className="w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
           >
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
             {isGenerating ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
-                Drafting your DM...
+                Drafting your Message...
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5 transition-transform group-hover:scale-110" />
-                Generate LinkedIn DM
+                Generate Outbound Message
               </>
             )}
           </button>
@@ -122,7 +138,7 @@ export default function LinkedinDmPage() {
           <div className="p-5 border-b border-[rgba(255,255,255,0.05)] bg-[#111] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-blue-400" />
-              <h3 className="font-bold text-white tracking-wide">Your LinkedIn DM</h3>
+              <h3 className="font-bold text-white tracking-wide">Your Final Draft</h3>
             </div>
             {generatedDM && (
               <button
@@ -147,7 +163,7 @@ export default function LinkedinDmPage() {
           </div>
         </div>
       </div>
-
+      
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes shimmer {
           100% { transform: translateX(100%); }
