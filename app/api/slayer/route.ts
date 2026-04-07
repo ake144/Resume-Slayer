@@ -140,13 +140,33 @@ export async function POST(request: Request) {
       ? optimizedResult.trapsFixed.map((t: string) => `- ${t}`).join('\n')
       : (optimizedResult?.trapsFixed || "");
 
+    // Truncate fields that might exceed varchar(255) constraints in Postgres
+    if (processedTrapsFixed.length > 255) {
+      processedTrapsFixed = processedTrapsFixed.substring(0, 252) + "...";
+    }
+
+    let jobTitleSafe = optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job";
+    if (jobTitleSafe.length > 255) {
+      jobTitleSafe = jobTitleSafe.substring(0, 252) + "...";
+    }
+
+    let jobUrlSafe = body.jobURL || body.jobUrl || "";
+    if (jobUrlSafe.length > 255) {
+      jobUrlSafe = jobUrlSafe.substring(0, 252) + "...";
+    }
+
+    let atsScoreSafe = optimizedResult?.atsScore || "";
+    if (atsScoreSafe.length > 50) {
+      atsScoreSafe = atsScoreSafe.substring(0, 47) + "...";
+    }
+
     const backendPayload = {
       resumeText: resumeText,
       jobDescription: effectiveJobDescription,
-      jobTitle: optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job",
-      jobUrl: body.jobURL || body.jobUrl || "",
+      jobTitle: jobTitleSafe,
+      jobUrl: jobUrlSafe,
       optimizedResume: optimizedResume,
-      atsScore: optimizedResult?.atsScore,
+      atsScore: atsScoreSafe,
       trapsFixed: processedTrapsFixed,
       missingSkills: Array.isArray(optimizedResult?.missingSkills)
         ? optimizedResult.missingSkills.join(', ')
@@ -166,7 +186,6 @@ export async function POST(request: Request) {
       }
     );
 
-
     console.log("Response from Java Spring Boot API:", response.data);
 
     return NextResponse.json(
@@ -179,10 +198,10 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("API error:", error);
+  } catch (error: any) {
+    console.error("API error:", error?.response?.data || error.message);
     return NextResponse.json(
-      { error: "Failed to process resume data" },
+      { error: "Failed to process resume data", details: error?.response?.data },
       { status: 500 }
     );
   }
