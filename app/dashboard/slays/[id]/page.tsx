@@ -47,7 +47,15 @@ export default function SlayDetailPage() {
         });
         
         if (response.ok) {
-          const data = await response.json();
+          let data = await response.json();
+          // If data is a string (double-encoded JSON), parse it
+          if (typeof data === 'string') {
+            try {
+              data = JSON.parse(data);
+            } catch (e) {
+              console.error("Failed to parse data string:", e);
+            }
+          }
           setSlay(data);
         } else if (response.status === 404) {
           // If the specific endpoint doesn't exist on backend, fallback to fetch all
@@ -55,7 +63,8 @@ export default function SlayDetailPage() {
             headers: { "Authorization": `Bearer ${token}` }
           });
           if (fallbackResp.ok) {
-            const allSlays = await fallbackResp.json();
+            const result = await fallbackResp.json();
+            const allSlays = Array.isArray(result) ? result : (result.content || []);
             const found = allSlays.find((s: any) => s.id.toString() === id);
             if (found) {
               setSlay(found);

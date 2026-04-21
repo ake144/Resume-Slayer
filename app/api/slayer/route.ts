@@ -4,41 +4,41 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(req: NextRequest) {
-      try{
-         
-        const page = req.nextUrl.searchParams.get("page") || "1";
-        const size = req.nextUrl.searchParams.get("size") || "10";
+  try {
 
-          const token = req.headers.get("Authorization");
+    const page = req.nextUrl.searchParams.get("page") || "1";
+    const size = req.nextUrl.searchParams.get("size") || "10";
 
-          console.log("Received GET request to /api/slayer with token:", token);
-          
-          if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-          }
+    const token = req.headers.get("Authorization");
 
-            const response = await axios.get("http://localhost:8080/api/slayer", {
-              params: {
-                page,
-                size
-              },
-              headers: {
-                Authorization: `${token}`
-              }
-            });
+    console.log("Received GET request to /api/slayer with token:", token);
 
-            if(response.status === 200){
-                  return NextResponse.json(response.data, { status: 200 });
-            } else {
-                  console.error("Unexpected response from Java Spring Boot API:", response.status, response.data);
-                  return NextResponse.json({ error: "Failed to fetch data from backend" }, { status: 502 });
-            }
- 
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const response = await axios.get("http://localhost:8080/api/slayer", {
+      params: {
+        page,
+        size
+      },
+      headers: {
+        Authorization: `${token}`
       }
-      catch(error){
-            console.error("Error in GET /api/slayer:", error);
-            return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-      }
+    });
+
+    if (response.status === 200) {
+      return NextResponse.json(response.data, { status: 200 });
+    } else {
+      console.error("Unexpected response from Java Spring Boot API:", response.status, response.data);
+      return NextResponse.json({ error: "Failed to fetch data from backend" }, { status: 502 });
+    }
+
+  }
+  catch (error) {
+    console.error("Error in GET /api/slayer:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 
 }
 
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
 
     const optimizedResume =
       typeof optimizedResult?.optimizedResume === "string" &&
-      optimizedResult.optimizedResume.trim().length > 0
+        optimizedResult.optimizedResume.trim().length > 0
         ? optimizedResult.optimizedResume
         : resumeText;
 
@@ -136,29 +136,13 @@ export async function POST(request: Request) {
       ? token
       : `Bearer ${token}`;
 
-    let processedTrapsFixed = Array.isArray(optimizedResult?.trapsFixed) 
+    let processedTrapsFixed = Array.isArray(optimizedResult?.trapsFixed)
       ? optimizedResult.trapsFixed.map((t: string) => `- ${t}`).join('\n')
       : (optimizedResult?.trapsFixed || "");
 
-    // Truncate fields that might exceed varchar(255) constraints in Postgres
-    if (processedTrapsFixed.length > 255) {
-      processedTrapsFixed = processedTrapsFixed.substring(0, 252) + "...";
-    }
-
     let jobTitleSafe = optimizedResult?.jobTitle || body.jobTitle || "Untitled Tech Job";
-    if (jobTitleSafe.length > 255) {
-      jobTitleSafe = jobTitleSafe.substring(0, 252) + "...";
-    }
-
     let jobUrlSafe = body.jobURL || body.jobUrl || "";
-    if (jobUrlSafe.length > 255) {
-      jobUrlSafe = jobUrlSafe.substring(0, 252) + "...";
-    }
-
     let atsScoreSafe = optimizedResult?.atsScore || "";
-    if (atsScoreSafe.length > 50) {
-      atsScoreSafe = atsScoreSafe.substring(0, 47) + "...";
-    }
 
     const backendPayload = {
       resumeText: resumeText,

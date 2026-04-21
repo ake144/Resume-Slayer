@@ -1,277 +1,235 @@
 'use client';
 
-import { Star, CalendarCheck, CheckCircle2, MoreHorizontal, Zap, BarChart3, TrendingUp, Briefcase } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
-import { SlayType } from "@/utils/types";
+import { useEffect, useState } from "react";
 import { getToken } from "@/utils/common";
+import { SlayType } from "@/utils/types";
 import Link from "next/link";
+import {
+  Zap,
+  Target,
+  History,
+  ArrowUpRight,
+  Sparkles,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  FileText,
+  Briefcase,
+  CalendarDays
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function DashboardPage() {
-  const [slays, setSlays] = useState<SlayType[]>([]);
+  const [stats, setStats] = useState({
+    totalSlays: 0,
+    avgScore: 0,
+    recentSlays: [] as SlayType[]
+  });
   const [loading, setLoading] = useState(true);
 
-  const fetchSlays = useCallback(async () => {
-    try {
-      const token = getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = getToken();
+        if (!token) return;
 
-      const response = await fetch(`/api/slayer?page=${0}&size=${8}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
+        const res = await fetch('/api/slayer?size=5', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.content || [];
+
+          // Calculate average score
+          const scores = content.map((s: any) => parseInt(s.atsScore) || 0);
+          const avg = scores.length > 0 ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0;
+
+          setStats({
+            totalSlays: data.totalItems || 0,
+            avgScore: avg,
+            recentSlays: content
+          });
         }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // console.log("Raw slays data:", data);
-        // const sortedData = data.sort((a: any, b: any) => 
-        //   new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        // );
-
-        const sortedData = data.content || [];
-
-        // console.log("Fetched slays:", sortedData);
-        setSlays(sortedData);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch slays:", error);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    fetchSlays();
-  }, [fetchSlays]);
-
-  // Derived stats
-  const avgScor = slays.length > 0
-    ? Math.round(slays.reduce((acc, curr) => acc + parseInt(curr.atsScore || "0"), 0) / slays.length)
-    : 0;
-
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
-      
-      {/* Greeting */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2 text-white">Welcome Back, Slayer ⚔️</h1>
-        <p className="text-gray-400 text-sm">
-          Your current profile score is in the <span className="text-blue-400 font-semibold">top 2%</span> of applicants in your field.
-        </p>
+    <div className="max-w-[1400px] mx-auto space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-[0.2em]"
+          >
+            <Sparkles className="w-4 h-4" />
+            Welcome Back, Slayer
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl font-black tracking-tight text-white"
+          >
+            Your Command Center<span className="text-blue-600">.</span>
+          </motion.h1>
+        </div>
+
+        <Link
+          href="/dashboard/workspace"
+          className="group relative overflow-hidden bg-white text-black font-black px-8 py-4 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-white/10 flex items-center gap-3"
+        >
+          <Zap className="w-5 h-5 fill-black" />
+          Start New Slay
+          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+        </Link>
       </div>
-    
+
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Total Slays */}
-        <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors">
-          <div className="absolute top-6 right-6 text-blue-500 bg-blue-500/10 p-2 rounded-xl">
-             <Briefcase className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-gray-400 mb-4">Total Slays</p>
-          <h2 className="text-4xl font-bold text-white mb-4">{loading ? "..." : slays.length}</h2>
-          <div className="flex items-center gap-2 text-sm">
-             <TrendingUp className="w-4 h-4 text-green-500" />
-             <span className="text-green-500 font-medium">Active applications</span>
-          </div>
-        </div>
-
-        {/* Action Taken */}
-        <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 relative overflow-hidden group hover:border-purple-500/30 transition-colors">
-          <div className="absolute top-6 right-6 text-purple-500 bg-purple-500/10 p-2 rounded-xl">
-             <CalendarCheck className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-gray-400 mb-4">Interviews Landed</p>
-          <h2 className="text-4xl font-bold text-white mb-4">3</h2>
-          <div className="flex items-center gap-2 text-sm">
-             <TrendingUp className="w-4 h-4 text-green-500" />
-             <span className="text-green-500 font-medium">+1 from last week</span>
-          </div>
-        </div>
-
-        {/* ATS Avg Score */}
-        <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-colors">
-          <div className="absolute top-6 right-6 text-green-500 bg-green-500/10 p-2 rounded-xl">
-             <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-gray-400 mb-4">ATS Avg Score</p>
-          <h2 className="text-4xl font-bold text-white mb-4">{loading ? "..." : (avgScor > 0 ? `${avgScor}%` : "0%")}</h2>
-          <div className="flex items-center gap-2 text-sm">
-             <TrendingUp className="w-4 h-4 text-green-500" />
-             <span className="text-green-500 font-medium">Optimization high</span>
-          </div>
-        </div>
+        {[
+          { label: "Total Optimizations", value: stats.totalSlays, icon: History, color: "blue" },
+          { label: "Average ATS Score", value: `${stats.avgScore}%`, icon: Target, color: "green" },
+          { label: "Success Rate", value: "94%", icon: TrendingUp, color: "purple" }
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + i * 0.1 }}
+            className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden group"
+          >
+            <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-${stat.color}-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700`}></div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{stat.label}</p>
+                <p className="text-4xl font-black text-white">{loading ? "..." : stat.value}</p>
+              </div>
+              <div className={`w-14 h-14 bg-${stat.color}-500/10 rounded-2xl flex items-center justify-center border border-${stat.color}-500/20`}>
+                <stat.icon className={`w-7 h-7 text-${stat.color}-500`} />
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Recent Slays Section */}
-        <div className="lg:col-span-2 bg-[#0a0a0c] border border-gray-800/50 rounded-2xl flex flex-col min-h-[400px]">
-          <div className="p-6 border-b border-gray-800/50 flex items-center justify-between">
-            <h3 className="font-bold text-lg text-white">Recent Slays</h3>
-            <Link href="/dashboard/history" className="text-sm text-blue-500 hover:text-blue-400 font-medium transition-colors">
-              View all
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        {/* Recent Activity */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+              <Clock className="w-5 h-5 text-blue-500" />
+              Recent Slays
+            </h3>
+            <Link href="/dashboard/history" className="text-sm font-bold text-gray-500 hover:text-white transition-colors flex items-center gap-1">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="p-0 overflow-x-auto flex-1">
+
+          <div className="space-y-4">
             {loading ? (
-              <div className="flex items-center justify-center h-full text-gray-500">Loading history...</div>
-            ) : slays.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 text-center h-full">
-                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mb-4">
-                  <Zap className="w-8 h-8 text-gray-600" />
-                </div>
-                <h4 className="text-gray-300 font-semibold mb-2">No slays yet</h4>
-                <p className="text-gray-500 text-sm mb-6 max-w-sm">You haven't optimized any resumes. Head to the workspace to start slaying ATS filters.</p>
-                <Link href="/workspace" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-xl transition-colors">
-                  Create First Slay
-                </Link>
+              [1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-white/5 rounded-3xl animate-pulse"></div>
+              ))
+            ) : stats.recentSlays.length === 0 ? (
+              <div className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-12 text-center space-y-4">
+                <p className="text-gray-500 font-medium">No recent activity found.</p>
+                <Link href="/dashboard/workspace" className="text-blue-500 font-bold hover:underline">Start your first slay</Link>
               </div>
             ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-800/50 text-xs text-gray-500 uppercase tracking-wider bg-[#111]/50">
-                    <th className="px-6 py-4 font-semibold">Role & URL</th>
-                    <th className="px-6 py-4 font-semibold">Match Score</th>
-                    <th className="px-6 py-4 font-semibold">Issues Fixed</th>
-                    <th className="px-6 py-4 font-semibold">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800/50">
-                  {slays.slice(0, 5).map((slay) => {
-                    let trapsCount = 0;
-                    if (typeof slay.trapsFixed === 'string' && slay.trapsFixed.length > 0) {
-                      try {
-                        const parsed = JSON.parse(slay.trapsFixed);
-                        if (Array.isArray(parsed)) trapsCount = parsed.length;
-                      } catch {
-                        trapsCount = slay.trapsFixed.split(',').length;
-                      }
-                    } else if (Array.isArray(slay.trapsFixed)) {
-                      trapsCount = slay.trapsFixed.length;
-                    }
-
-                    return (
-                    <tr key={slay.id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-white text-sm truncate max-w-[200px]">{slay.jobTitle}</p>
-                        {slay.jobUrl && slay.jobUrl !== "Unknown URL" && (
-                          <a href={slay.jobUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline truncate max-w-[200px] block mt-1">
-                            {slay.jobUrl}
-                          </a>
-                        )}
-                        <span className="text-[10px] text-gray-500 block mt-1">
-                          {slay.createdAt ? new Date(slay.createdAt).toLocaleDateString() : 'Just now'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-blue-500 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]" 
-                              style={{ width: slay.atsScore || '0%' }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-bold text-gray-200">{slay.atsScore || '0%'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className="text-sm font-medium text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md">
-                           {trapsCount > 0 ? `${trapsCount} Fixed` : 'No traps'}
-                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/dashboard/slays/${slay.id}`} className="text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              stats.recentSlays.map((slay, i) => (
+                <motion.div
+                  key={slay.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="bg-[#0a0a0c] border border-white/5 rounded-[2rem] p-6 hover:bg-white/[0.02] transition-all group cursor-pointer"
+                  onClick={() => window.location.href = `/dashboard/slays/${slay.id}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-blue-500/30 transition-colors">
+                        <FileText className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{slay.jobTitle}</h4>
+                        <p className="text-xs text-gray-500 font-medium flex items-center gap-2">
+                          <CalendarDays className="w-3 h-3" />
+                          {new Date(slay.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="text-right hidden sm:block">
+                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">ATS Score</p>
+                        <p className={`text-lg font-black ${parseInt(slay.atsScore) >= 85 ? 'text-green-400' : 'text-yellow-400'}`}>
+                          {slay.atsScore}
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-600 transition-all">
+                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
             )}
           </div>
         </div>
 
-        {/* Right Column - Promos & Skill Roadmap */}
-        <div className="space-y-6">
-          
-          {/* Skill Roadmap Snapshot */}
-          <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <BarChart3 className="w-4 h-4 text-blue-500" />
-                </div>
-                <h3 className="font-bold text-lg text-white">Skill Snapshot</h3>
+        {/* Quick Actions / Tips */}
+        <div className="lg:col-span-4 space-y-8">
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
+            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="relative z-10 space-y-6">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/20">
+                <Sparkles className="w-7 h-7" />
               </div>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-300 font-medium">React & Tailwind CSS</span>
-                  <span className="text-blue-400 font-bold">95%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full w-[95%]"></div>
-                </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black leading-tight">Pro Tip: Cover Letters</h3>
+                <p className="text-indigo-100/70 text-sm leading-relaxed">
+                  Did you know that slayed resumes with matching cover letters have a 45% higher response rate?
+                </p>
               </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-300 font-medium">System Architecture</span>
-                  <span className="text-blue-400 font-bold">78%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full w-[78%]"></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-300 font-medium">Cloud & DevOps</span>
-                  <span className="text-blue-400 font-bold">64%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full w-[64%]"></div>
-                </div>
-              </div>
-            </div>
-
-            <Link href="/dashboard/roadmap" className="flex items-center justify-center w-full mt-8 bg-[#111] hover:bg-gray-800 text-white font-medium py-3 rounded-xl border border-gray-800 transition-colors text-sm">
-              View Full Roadmap
-            </Link>
-          </div>
-
-          {/* Upgrade Card */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 relative overflow-hidden group">
-            {/* Decor */}
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-            <div className="absolute top-2 right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
-             <div className="absolute bottom-4 right-4 text-white/20 group-hover:rotate-12 transition-transform duration-700">
-               <Star className="w-24 h-24 stroke-[0.5]" />
-             </div>
-            
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider mb-4 border border-white/10">
-                <Zap className="w-3 h-3 fill-white" /> Pro Plan
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2 leading-tight">Slay Beyond <br/>Limits</h3>
-              <p className="text-blue-100 text-sm mb-6 max-w-[200px] leading-relaxed">
-                Unlock unlimited ATS checks, auto-apply features, and recruiter AI chats.
-              </p>
-              <button className="bg-white text-blue-700 hover:bg-gray-50 border-none font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-xl shadow-black/10 hover:scale-105 active:scale-95">
-                Go Pro Max
+              <button className="w-full bg-white text-indigo-600 font-black py-3 rounded-xl text-sm hover:bg-indigo-50 transition-colors">
+                Generate One Now
               </button>
             </div>
           </div>
 
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-8 space-y-6">
+            <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest">Next Steps</h3>
+            <div className="space-y-4">
+              {[
+                { label: "Complete your profile", icon: CheckCircle2, done: true },
+                { label: "Optimize 3 resumes", icon: Zap, done: stats.totalSlays >= 3 },
+                { label: "Generate a roadmap", icon: Target, done: false }
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`w-5 h-5 ${item.done ? 'text-green-500' : 'text-gray-700'}`} />
+                    <span className={`text-sm font-bold ${item.done ? 'text-gray-400 line-through' : 'text-white'}`}>{item.label}</span>
+                  </div>
+                  {!item.done && <ChevronRight className="w-4 h-4 text-gray-700" />}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
       </div>
-      
     </div>
   );
 }

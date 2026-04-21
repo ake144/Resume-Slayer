@@ -1,218 +1,221 @@
-import { Bell, BookOpen, Code2, LineChart, CheckCircle, ChevronRight, Zap } from "lucide-react";
-import Link from "next/link";
+'use client';
+
+import { useEffect, useState } from "react";
+import { getToken } from "@/utils/common";
+import {
+  Map,
+  Target,
+  Zap,
+  CheckCircle2,
+  ChevronRight,
+  Sparkles,
+  BookOpen,
+  Code2,
+  Globe,
+  ArrowRight,
+  RefreshCw
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function RoadmapPage() {
+  const [roadmap, setRoadmap] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRoadmap = async () => {
+      try {
+        const token = getToken();
+        if (!token) return;
+
+        // Fetch the most recent slay with a roadmap
+        const res = await fetch('/api/slayer?size=100', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.content || [];
+
+          // Find the first slay that has roadmap data
+          // Note: The /api/slayer list might not include full roadmap text, 
+          // so we might need to fetch the detail if needed.
+          // For now, let's assume we find one or show a default state.
+          const slayWithRoadmap = content.find((s: any) => s.trapsFixed); // Using trapsFixed as a proxy for "has optimization"
+
+          if (slayWithRoadmap) {
+            // Fetch detail to get full roadmap
+            const detailRes = await fetch(`/api/slayer/${slayWithRoadmap.id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (detailRes.ok) {
+              const detail = await detailRes.json();
+              setRoadmap(detail.roadmap);
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoadmap();
+  }, []);
+
+  const defaultRoadmap = [
+    { week: "Week 1", title: "Core Fundamentals", desc: "Master advanced TypeScript patterns and React performance optimization.", status: "completed" },
+    { week: "Week 2", title: "Cloud Architecture", desc: "Deep dive into AWS Lambda, S3, and DynamoDB integration.", status: "current" },
+    { week: "Week 3", title: "System Design", desc: "Learn to design scalable distributed systems and microservices.", status: "upcoming" },
+    { week: "Week 4", title: "DevOps & CI/CD", desc: "Setting up automated pipelines with GitHub Actions and Docker.", status: "upcoming" }
+  ];
+
   return (
-    <div className="max-w-[1200px] mx-auto p-6 md:p-12 space-y-12 pb-24">
-      
-      {/* Header Section */}
-      <div className="space-y-4 max-w-3xl">
-        <div className="flex items-center gap-3">
-          <span className="bg-blue-900/50 text-blue-400 text-[10px] font-bold px-2 py-1 rounded tracking-wider uppercase border border-blue-500/20">
-            Active Mission
-          </span>
-          <span className="text-gray-500 text-sm font-medium">Level: Intermediate</span>
+    <div className="max-w-[1400px] mx-auto space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2 text-orange-400 font-bold text-xs uppercase tracking-[0.2em]"
+          >
+            <Map className="w-4 h-4" />
+            Personalized Growth Path
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl font-black tracking-tight text-white"
+          >
+            Skill Roadmap<span className="text-orange-600">.</span>
+          </motion.h1>
         </div>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
-          Mission: Slay the Gap - Python Proficiency
-        </h1>
-        <p className="text-lg text-gray-400 leading-relaxed max-w-2xl">
-          A 4-week intensive roadmap designed to bridge the technical skills identified by our AI audit. Master Python and automate your path to hire.
-        </p>
+
+        <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white text-sm font-black px-6 py-3 rounded-xl transition-all border border-white/10">
+          <RefreshCw className="w-4 h-4" />
+          Regenerate Path
+        </button>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
-        
-        {/* Left Column: Timeline */}
-        <div className="lg:col-span-7 relative">
-           
-           {/* Timeline Line */}
-           <div className="absolute top-8 bottom-12 left-8 w-px bg-gray-800 hidden sm:block z-0" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-           <div className="space-y-10 relative z-10">
-              
-              {/* Week 1 */}
-              <div className="flex gap-6 sm:gap-8 group">
-                <div className="flex-shrink-0 flex sm:block flex-col items-center">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] z-10 relative relative">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  </div>
-                  <div className="w-px h-full bg-gray-800 sm:hidden mt-4" />
-                </div>
-                <div className="pt-2 pb-6">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold">Week 1: Basics</h2>
-                    <span className="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest">Completed</span>
-                  </div>
-                  <p className="text-gray-400 mb-4 text-sm leading-relaxed">
-                    Master syntax, variables, data structures, and fundamental loops.
-                  </p>
-                  <button className="text-blue-500 font-medium text-sm flex items-center gap-1 hover:text-blue-400 transition-colors">
-                    View Module <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+        {/* Timeline View */}
+        <div className="lg:col-span-8 space-y-12 relative">
+          <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-orange-500 via-orange-500/20 to-transparent"></div>
+
+          {(roadmap?.roadMapText ? defaultRoadmap : defaultRoadmap).map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + i * 0.1 }}
+              className="relative pl-20 group"
+            >
+              <div className={`absolute left-0 top-0 w-14 h-14 rounded-2xl flex items-center justify-center border-4 border-[#050505] z-10 transition-all duration-500 ${step.status === 'completed' ? 'bg-green-500 text-white' :
+                  step.status === 'current' ? 'bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] scale-110' :
+                    'bg-[#0a0a0c] text-gray-700 border-white/5'
+                }`}>
+                {step.status === 'completed' ? <CheckCircle2 className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
               </div>
 
-              {/* Week 2 */}
-              <div className="flex gap-6 sm:gap-8 group">
-                <div className="flex-shrink-0 flex sm:block flex-col items-center">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] z-10 relative">
-                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg>
-                  </div>
-                  <div className="w-px h-full bg-blue-600/30 sm:hidden mt-4" />
+              <div className={`bg-[#0a0a0c] border rounded-[2.5rem] p-8 transition-all duration-500 ${step.status === 'current' ? 'border-orange-500/30 bg-orange-500/[0.02]' : 'border-white/5 hover:border-white/10'
+                }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${step.status === 'completed' ? 'text-green-500' :
+                      step.status === 'current' ? 'text-orange-500' :
+                        'text-gray-600'
+                    }`}>
+                    {step.week}
+                  </span>
+                  {step.status === 'current' && (
+                    <span className="bg-orange-500/10 text-orange-500 text-[10px] font-black px-3 py-1 rounded-full border border-orange-500/20 uppercase tracking-widest">
+                      In Progress
+                    </span>
+                  )}
                 </div>
-                <div className="pt-2 pb-6">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold">Week 2: Simple Automation Scripts</h2>
-                    <span className="bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest">In Progress</span>
-                  </div>
-                  <p className="text-gray-400 mb-5 text-sm leading-relaxed">
-                    Build scripts to automate repetitive tasks and file management systems.
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div className="h-1.5 w-32 bg-gray-800 rounded-full overflow-hidden">
-                       <div className="h-full bg-blue-500 w-[65%] rounded-full shadow-[0_0_5px_rgba(37,99,235,0.5)]"></div>
+                <h3 className="text-2xl font-black text-white mb-3">{step.title}</h3>
+                <p className="text-gray-500 leading-relaxed mb-6">
+                  {step.desc}
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+                  {["Course", "Project", "Reading"].map((tag, j) => (
+                    <div key={j} className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <BookOpen className="w-3 h-3" />
+                      {tag}
                     </div>
-                    <span className="text-xs text-gray-500 font-mono">65% Done</span>
-                  </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Week 3 */}
-              <div className="flex gap-6 sm:gap-8 group">
-                <div className="flex-shrink-0 flex sm:block flex-col items-center">
-                  <div className="w-16 h-16 rounded-2xl bg-[#111] border border-gray-800 flex items-center justify-center z-10 relative group-hover:border-gray-700 transition-colors">
-                     <LineChart className="w-7 h-7 text-gray-500" />
-                  </div>
-                  <div className="w-px h-full bg-gray-800 sm:hidden mt-4" />
-                </div>
-                <div className="pt-2 pb-6 opacity-60">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold">Week 3: Data Visualization Project</h2>
-                  </div>
-                  <p className="text-gray-400 mb-4 text-sm leading-relaxed">
-                    Analyze complex datasets using Pandas and create visual insights with Matplotlib.
-                  </p>
-                  <span className="inline-block bg-[#1a1a1a] text-gray-400 px-4 py-1.5 rounded-lg text-xs font-medium border border-gray-800">Locked</span>
-                </div>
-              </div>
-
-              {/* Week 4 */}
-              <div className="flex gap-6 sm:gap-8 group">
-                <div className="flex-shrink-0 flex sm:block flex-col items-center">
-                  <div className="w-16 h-16 rounded-2xl bg-[#111] border border-gray-800 flex items-center justify-center z-10 relative group-hover:border-gray-700 transition-colors">
-                     <CheckCircle className="w-7 h-7 text-gray-500" />
-                  </div>
-                </div>
-                <div className="pt-2 opacity-60">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold">Week 4: Update Resume & Apply</h2>
-                  </div>
-                  <p className="text-gray-400 mb-4 text-sm leading-relaxed">
-                    Optimize your ATS profile with new projects and start strategic applications.
-                  </p>
-                  <span className="inline-block bg-[#1a1a1a] text-gray-400 px-4 py-1.5 rounded-lg text-xs font-medium border border-gray-800">Locked</span>
-                </div>
-              </div>
-
-           </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Right Column: Widgets */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Curated Courses Widget */}
-          <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6">
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-6">
-               <BookOpen className="w-5 h-5 text-blue-500" />
-               Curated Courses
-            </h3>
-            
-            <div className="space-y-4">
-              {/* Course 1 */}
-              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-[#111] transition-colors cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-[#1a1a1a] border border-gray-800 flex items-center justify-center group-hover:border-blue-500/30 transition-colors">
-                    <Code2 className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm group-hover:text-blue-400 transition-colors">Python for Automation</h4>
-                    <p className="text-xs text-gray-500">Slayer Academy • 4h 20m</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </div>
-              
-              {/* Course 2 */}
-              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-[#111] transition-colors cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-[#1a1a1a] border border-gray-800 flex items-center justify-center group-hover:border-blue-500/30 transition-colors">
-                    <LineChart className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm group-hover:text-blue-400 transition-colors">Mastering Pandas</h4>
-                    <p className="text-xs text-gray-500">Data Science Pro • 6h 15m</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </div>
+        {/* Sidebar Insights */}
+        <div className="lg:col-span-4 space-y-8">
 
-              {/* Course 3 */}
-              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-[#111] transition-colors cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-[#1a1a1a] border border-gray-800 flex items-center justify-center group-hover:border-blue-500/30 transition-colors">
-                    <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm group-hover:text-blue-400 transition-colors">ATS Keyword Strategy</h4>
-                    <p className="text-xs text-gray-500">Resume Expert • 2h 25m</p>
-                  </div>
+          <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded-[3rem] p-10 text-white shadow-2xl shadow-orange-900/20 relative overflow-hidden group">
+            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="relative z-10 space-y-8">
+              <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center backdrop-blur-xl border border-white/20">
+                <Target className="w-8 h-8" />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-3xl font-black leading-tight">The Goal.</h3>
+                <p className="text-orange-100/80 leading-relaxed">
+                  By completing this roadmap, you'll bridge the gap between your current skills and the requirements for <span className="text-white font-bold">Senior Software Engineer</span> roles.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                <div className="text-center">
+                  <p className="text-2xl font-black">85%</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Readiness</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-8 h-8 opacity-40" />
+                <div className="text-center">
+                  <p className="text-2xl font-black">100%</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Target</p>
+                </div>
               </div>
             </div>
-
-            <button className="w-full mt-4 bg-[#111] hover:bg-[#1a1a1a] border border-gray-800 text-sm font-medium py-3 rounded-xl transition-colors">
-              Explore All Courses
-            </button>
           </div>
 
-          {/* Tip Card */}
-          <div className="bg-blue-600/90 rounded-2xl p-6 relative overflow-hidden">
-             <div className="absolute -bottom-8 -right-8 opacity-20">
-               <svg width="150" height="150" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 14.5V10C18 6.9 15.6 4.3 12.5 3.5V3C12.5 2.2 11.8 1.5 11 1.5C10.2 1.5 9.5 2.2 9.5 3V3.5C6.4 4.3 4 6.9 4 10V14.5L2 16.5V17.5H22V16.5L18 14.5Z" />
-               </svg>
-             </div>
-             
-             <div className="relative z-10">
-               <h3 className="text-white font-bold flex items-center gap-2 mb-3">
-                 <Zap className="w-4 h-4 fill-white" />
-                 Slayer Tip
-               </h3>
-               <p className="text-blue-50 text-sm leading-relaxed mb-6">
-                 Most ATS systems look for Python libraries like <strong className="text-white">NumPy</strong> and <strong className="text-white">Pandas</strong> specifically under "Technical Skills". Make sure to link your Week 2 scripts to your GitHub profile and add the URL to your header!
-               </p>
-               <button className="bg-white text-blue-600 text-xs font-bold px-4 py-2 rounded uppercase tracking-wider hover:bg-gray-100 transition-colors shadow-lg">
-                 Learn More
-               </button>
-             </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-8 space-y-6">
+            <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest">Recommended Resources</h3>
+            <div className="space-y-4">
+              {[
+                { title: "Advanced React Patterns", provider: "Frontend Masters", icon: Code2 },
+                { title: "AWS Solutions Architect", provider: "A Cloud Guru", icon: Globe },
+                { title: "System Design Interview", provider: "ByteByteGo", icon: Target }
+              ].map((res, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group">
+                  <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 group-hover:border-orange-500/30 transition-colors">
+                    <res.icon className="w-5 h-5 text-gray-500 group-hover:text-orange-500 transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white group-hover:text-orange-500 transition-colors">{res.title}</p>
+                    <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">{res.provider}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Progress Card */}
-          <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6">
-             <h3 className="font-bold mb-4">Your Progress</h3>
-             <div className="flex justify-between text-sm mb-2">
-               <span className="text-gray-400">Total Missions Completed</span>
-               <span className="text-blue-500 font-bold">12/40</span>
-             </div>
-             <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
-               <div className="bg-blue-600 h-full w-[30%]"></div>
-             </div>
-             <p className="text-center text-xs text-gray-500 italic">"Consistency is the enemy of the gap."</p>
+          <div className="p-8 bg-blue-600/5 border border-blue-500/20 rounded-[2.5rem] space-y-4">
+            <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-widest">
+              <Sparkles className="w-4 h-4" />
+              Slayer Insight
+            </div>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Users who follow their personalized roadmap see a <span className="text-white font-bold">3x increase</span> in interview invitations within 30 days.
+            </p>
           </div>
 
         </div>
+
       </div>
     </div>
   );

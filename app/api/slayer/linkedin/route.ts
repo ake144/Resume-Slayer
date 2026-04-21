@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { resumeText, jobDescription } = await req.json();
+    const body = await req.json();
+    const { resumeText } = body;
+    const jobDescription = body.targetProfile || body.jobDescription;
 
     if (!resumeText || !jobDescription) {
       return NextResponse.json(
-        { error: "Missing resumeText or jobDescription" },
+        { error: "Missing resumeText and targetProfile/jobDescription" },
         { status: 400 }
       );
     }
