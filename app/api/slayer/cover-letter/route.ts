@@ -1,5 +1,19 @@
 import { NextResponse } from "next/server";
 
+const uniqueOrdered = (items: string[]) => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const item of items) {
+    if (!seen.has(item)) {
+      seen.add(item);
+      result.push(item);
+    }
+  }
+
+  return result;
+};
+
 export async function POST(req: Request) {
 
     const apiKey = (process.env.OPENROUTER_API_KEY ?? "")
@@ -30,34 +44,52 @@ Job Description:
 ${jobDescription}
 `;
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      // signal: constroller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
-        "X-OpenRouter-Title": process.env.OPENROUTER_APP_NAME || "resume-slayer",
+    const candidateModels = uniqueOrdered([
+      process.env.OPENROUTER_MODEL || "",
+      "google/gemini-2.5-flash:free",
+      "meta-llama/llama-3-8b-instruct:free",
+      "openai/gpt-4o-mini"
+    ].filter(Boolean));
 
-      },
-      body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || "openrouter/free",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-      }),
-    });
+    let coverLetter = "";
+    let lastStatus = 500;
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Grok API Error:", errorData);
-      return NextResponse.json(
-        { error: "Failed to call Grok API for cover letter" },
-        { status: response.status }
-      );
+    for (const model of candidateModels) {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
+          "X-OpenRouter-Title": process.env.OPENROUTER_APP_NAME || "resume-slayer",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        lastStatus = response.status;
+        const errorData = await response.text();
+        console.error(`OpenRouter API Error (${model}):`, errorData);
+        continue;
+      }
+
+      const data = await response.json();
+      coverLetter = data.choices?.[0]?.message?.content?.trim() || "";
+      if (coverLetter) {
+        break;
+      }
     }
 
-    const data = await response.json();
-    const coverLetter = data.choices[0].message.content.trim();
+    if (!coverLetter) {
+      return NextResponse.json(
+        { error: "Failed to call OpenRouter for cover letter" },
+        { status: lastStatus }
+      );
+    }
 
     return NextResponse.json({ coverLetter });
   } catch (error: any) {

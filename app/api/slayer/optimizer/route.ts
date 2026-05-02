@@ -1,4 +1,16 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
+
+// Simple in-memory cache to avoid redundant AI calls
+const optimizerCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+const getCacheKey = (resumeText: string, jobDescription: string) => {
+  return crypto
+    .createHash("sha256")
+    .update(resumeText + jobDescription)
+    .digest("hex");
+};
 
 const STOPWORDS = new Set([
   "the", "and", "for", "with", "you", "your", "this", "that", "are", "from", "have", "has", "will", "our",
@@ -242,11 +254,9 @@ const callOpenRouterOptimizer = async (resumeText: string, jobDescription: strin
 
   const candidateModels = uniqueOrdered([
     process.env.OPENROUTER_MODEL || "",
-    "openrouter/hunter-alpha",
-    "nvidia/nemotron-3-super-120b-a12b:free",
-    "openrouter/free",
-    "stepfun/step-3.5-flash:free",
-    "openrouter/healer-alpha"
+    "google/gemini-2.5-flash:free",
+    "meta-llama/llama-3-8b-instruct:free",
+    "nvidia/nemotron-3-super-120b-a12b:free"
   ].filter(Boolean));
 
   let lastError = "";
@@ -335,12 +345,21 @@ export async function POST(req: Request) {
       return NextResponse.json(buildLocalOptimization(resumeText, jobDescription));
     }
 
+    const cacheKey = getCacheKey(resumeText, jobDescription);
+    const cachedResult = optimizerCache.get(cacheKey);
+
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_TTL) {
+      console.log("Returning cached optimizer result");
+      return NextResponse.json(cachedResult.data);
+    }
+
     const providerResult =
       provider === "openrouter"
         ? await callOpenRouterOptimizer(resumeText, jobDescription)
         : await callXaiOptimizer(resumeText, jobDescription);
 
     if (providerResult) {
+      optimizerCache.set(cacheKey, { data: providerResult, timestamp: Date.now() });
       return NextResponse.json(providerResult);
     }
 

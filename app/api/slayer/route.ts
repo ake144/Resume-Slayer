@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   try {
 
-    const page = req.nextUrl.searchParams.get("page") || "1";
+    const page = req.nextUrl.searchParams.get("page") || "0";
     const size = req.nextUrl.searchParams.get("size") || "10";
 
     const token = req.headers.get("Authorization");
@@ -65,8 +65,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    console.log("Received POST request to /api/slayer with body:", body);
 
     const optimizerUrl = new URL("/api/slayer/optimizer", request.url);
     const optimizerResponse = await fetch(optimizerUrl, {

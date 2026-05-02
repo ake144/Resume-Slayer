@@ -1,7 +1,11 @@
 
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/dashboard/sidebar";
 import { Header } from "../components/dashboard/header";
-import { getToken } from "@/utils/common";
+import { getValidToken, clearAuth } from "@/utils/common";
 import LoginPage from "../(auth)/login/page";
 
 export default function DashboardLayout({
@@ -9,7 +13,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
 
+  useEffect(() => {
+    const t = getValidToken();
+    if (!t) {
+      clearAuth();
+      router.push('/login');
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans antialiased flex">

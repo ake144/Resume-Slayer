@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Navbar } from "../../components/landing/navbar";
 import { InputSection } from "../../components/workspace/input-section";
 import { Workspace as WorkspaceView } from "../../components/workspace/workspace";
+import { getValidToken, clearAuth } from '@/utils/common';
 
 export default function WorkspacePage() {
   // In a real app, this would be managed by state/context based on whether the user has submitted data
@@ -11,14 +13,17 @@ export default function WorkspacePage() {
   
   const [token, setToken] = useState<string | null>(null);
 
+  const router = useRouter();
+
   useEffect(() => {
-    const t = localStorage.getItem("token");
+    const t = getValidToken();
     if (!t) {
-      window.location.href = "/login";
+      clearAuth();
+      router.push('/login');
     } else {
       setToken(t);
     }
-  }, []);
+  }, [router]);
 
   if (!token) {
     return null; // Render nothing while redirecting
