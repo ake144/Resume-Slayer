@@ -114,6 +114,57 @@ export default function SlayDetailPage() {
   };
 
   const parsedResume = slay?.optimizedResume ? parseResume(slay.optimizedResume) : null;
+  const roadmapSource = slay?.roadmap ?? slay?.roadMap;
+
+  const roadmapText = (() => {
+    if (!roadmapSource) return "";
+
+    if (Array.isArray(roadmapSource)) {
+      const textCandidate = roadmapSource.find(
+        (item) => typeof item === 'string' && item.trim().length > 0
+      );
+      return textCandidate ? String(textCandidate) : "";
+    }
+
+    if (typeof roadmapSource === 'string') {
+      return roadmapSource;
+    }
+
+    if (typeof roadmapSource === 'object') {
+      return roadmapSource.roadMapText || roadmapSource.roadmapText || "";
+    }
+
+    return "";
+  })();
+
+  const roadmapFocus = (() => {
+    if (!roadmapSource) return [] as string[];
+
+    const normalizeList = (value: unknown) => {
+      if (Array.isArray(value)) {
+        return value.map((item) => String(item).trim()).filter(Boolean);
+      }
+
+      if (typeof value === 'string') {
+        return value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      return [] as string[];
+    };
+
+    if (Array.isArray(roadmapSource)) {
+      return normalizeList(roadmapSource[0]);
+    }
+
+    if (typeof roadmapSource === 'object') {
+      return normalizeList(roadmapSource.missingSkills || roadmapSource.goals);
+    }
+
+    return [] as string[];
+  })();
 
   const styleMaps = {
     modern: {
@@ -430,15 +481,27 @@ export default function SlayDetailPage() {
             </div>
           )}
 
-          {slay.roadMap?.roadMapText && (
+          {(roadmapText || roadmapFocus.length > 0) && (
              <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
                  <div className="flex items-center mb-4">
                    <Target className="w-5 h-5 text-orange-400 mr-2" />
-                   <h3 className="font-semibold text-white">Learning Roadmap</h3>
+                   <h3 className="font-semibold text-white">Goals</h3>
                  </div>
-                 <div className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">
-                   {slay.roadMap.roadMapText}
-                 </div>
+                 {roadmapFocus.length > 0 && (
+                   <div className="mb-4">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-orange-300/80 mb-2">Focus Areas</p>
+                     <ul className="space-y-2 text-sm text-gray-300 list-disc pl-4">
+                       {roadmapFocus.map((item, index) => (
+                         <li key={index}>{item}</li>
+                       ))}
+                     </ul>
+                   </div>
+                 )}
+                 {roadmapText && (
+                   <div className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-4">
+                     {roadmapText}
+                   </div>
+                 )}
              </div>
           )}
 
