@@ -143,7 +143,6 @@ export async function POST(request: Request) {
     let atsScoreSafe = optimizedResult?.atsScore || "";
 
     const backendPayload = {
-      resumeText: resumeText,
       jobDescription: effectiveJobDescription,
       jobTitle: jobTitleSafe,
       jobUrl: jobUrlSafe,

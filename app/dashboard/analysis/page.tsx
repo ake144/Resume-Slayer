@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getToken } from "@/utils/common";
 import { SlayType } from "@/utils/types";
+import Link from "next/link"; 
 import {
   BarChart3,
   TrendingUp,

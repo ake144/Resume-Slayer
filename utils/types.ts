@@ -5,7 +5,6 @@ export interface SlayType {
     company: string;
     createdAt: string;
     optimizedResume: string;
-    originalResume: string;
     jobUrl: string;
     trapsFixed?: string | string[];
     missingSkills?: string | string[];

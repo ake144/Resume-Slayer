@@ -15,7 +15,7 @@ export default function SlayDetailPage() {
   const [slay, setSlay] = useState<SlayType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'optimized' | 'original' | 'coverLetter'>('optimized');
+  const [activeTab, setActiveTab] = useState<'optimized' | 'coverLetter'>('optimized');
   const [activeTemplate, setActiveTemplate] = useState<'modern' | 'executive' | 'sidebar'>('modern');
   
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
@@ -200,7 +200,7 @@ export default function SlayDetailPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          resumeText: slay.optimizedResume || slay.originalResume,
+          resumeText: slay.optimizedResume,
           jobDescription: `Job Title: ${slay.jobTitle || 'Unknown'}\nJob URL: ${slay.jobUrl || 'Unknown'} - Please infer the likely job duties from the title and align the cover letter towards it.`,
         }),
       });
@@ -247,7 +247,7 @@ export default function SlayDetailPage() {
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-400 to-indigo-500">
               {slay.jobTitle && slay.jobTitle !== 'Unknown Title' ? slay.jobTitle : `Slay #${slay.id}`}
             </h1>
           </div>
@@ -266,7 +266,7 @@ export default function SlayDetailPage() {
         </div>
 
         {/* ATS Score Card */}
-        <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-4 min-w-[200px] flex items-center justify-between">
+        <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-4 min-w-50 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-400 mb-1">ATS Match Score</p>
             <p className="text-3xl font-bold text-green-400">{slay.atsScore}</p>
@@ -292,16 +292,6 @@ export default function SlayDetailPage() {
               Optimized Version
             </button>
             <button
-              onClick={() => setActiveTab('original')}
-              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'original' 
-                  ? 'border-indigo-500 text-indigo-400' 
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              Original Version
-            </button>
-            <button
               onClick={() => setActiveTab('coverLetter')}
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                   activeTab === 'coverLetter' 
@@ -313,11 +303,11 @@ export default function SlayDetailPage() {
             </button>
           </div>
 
-          <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-6 min-h-[600px] overflow-x-auto">
+          <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-6 min-h-150 overflow-x-auto">
             {activeTab === 'coverLetter' ? (
               <div className="max-w-[210mm] mx-auto bg-white text-gray-900 p-8 sm:p-12 shadow-lg resume-document font-sans">
                 {generatingCL ? (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[400px] space-y-4">
+                  <div className="flex flex-col items-center justify-center h-full min-h-100 space-y-4">
                     <RefreshCw className="w-8 h-8 animate-spin text-purple-500" />
                     <p className="text-gray-500 font-medium">Drafting your actionable cover letter with AI...</p>
                   </div>
@@ -326,7 +316,7 @@ export default function SlayDetailPage() {
                     {coverLetter}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[400px] space-y-4">
+                  <div className="flex flex-col items-center justify-center h-full min-h-100 space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-2">
                        <FileText className="w-8 h-8 text-purple-600" />
                     </div>
@@ -356,11 +346,11 @@ export default function SlayDetailPage() {
                           <ReactMarkdown components={styleMaps.modern.header}>{parsedResume.header}</ReactMarkdown>
                         </div>
                         <div className="flex gap-10 px-10 py-8">
-                          <div className="flex-[2] space-y-6">
+                          <div className="flex-2 space-y-6">
                             {parsedResume.summary && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.summary}</ReactMarkdown>}
                             {parsedResume.experience && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.experience}</ReactMarkdown>}
                           </div>
-                          <div className="flex-[1] space-y-6">
+                          <div className="flex-1 space-y-6">
                             {parsedResume.education && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.education}</ReactMarkdown>}
                             {parsedResume.skills && <ReactMarkdown components={styleMaps.modern.body}>{parsedResume.skills}</ReactMarkdown>}
                             {parsedResume.others.map((other, i) => <ReactMarkdown key={i} components={styleMaps.modern.body}>{other}</ReactMarkdown>)}
@@ -405,11 +395,7 @@ export default function SlayDetailPage() {
                   <div className="text-gray-500 italic p-12">No optimized resume data available.</div>
                 )}
               </div>
-            ) : (
-              <div className="max-w-none text-gray-300 text-sm whitespace-pre-wrap font-mono leading-relaxed p-4">
-                {slay.originalResume || 'No original resume data available.'}
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -494,7 +480,6 @@ export default function SlayDetailPage() {
                   let text = "";
                   if (activeTab === 'optimized') text = slay.optimizedResume;
                   else if (activeTab === 'coverLetter') text = coverLetter || "";
-                  else text = slay.originalResume;
                   
                   if (!text) {
                      alert("Nothing to copy!");
@@ -507,7 +492,7 @@ export default function SlayDetailPage() {
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex justify-center items-center"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Copy {activeTab === 'optimized' ? 'Optimized' : activeTab === 'coverLetter' ? 'Cover Letter' : 'Original'}
+                Copy {activeTab === 'optimized' ? 'Optimized' : 'Cover Letter'}
               </button>
               
               {activeTab === 'coverLetter' && coverLetter && (
