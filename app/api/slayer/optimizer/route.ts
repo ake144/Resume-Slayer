@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import {
+  buildSlayerRateLimitHeaders,
+  checkSlayerRateLimit,
+  getSlayerQuotaIdentity,
+  isInternalSlayerRequest,
+} from "../../_lib/rate-limit";
 
 // Simple in-memory cache to avoid redundant AI calls
 const optimizerCache = new Map<string, { data: any; timestamp: number }>();
@@ -327,6 +333,33 @@ export async function POST(req: Request) {
   let requestedProvider = "local";
 
   try {
+    if (!isInternalSlayerRequest(req)) {
+      const token = req.headers.get("Authorization")?.trim();
+
+      if (!token) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const rateLimitIdentity = getSlayerQuotaIdentity(req);
+      const rateLimitResult = checkSlayerRateLimit(rateLimitIdentity.key);
+
+      if (!rateLimitResult.allowed) {
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded",
+            message: "You can submit 2 Slayer requests every 2 hours.",
+          },
+          {
+            status: 429,
+            headers: buildSlayerRateLimitHeaders(
+              rateLimitResult.retryAfterSeconds,
+              rateLimitResult.resetAt
+            ),
+          }
+        );
+      }
+    }
+
     const body = await req.json();
     resumeText = body?.resumeText;
     jobDescription = body?.jobDescription;

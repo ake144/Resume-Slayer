@@ -1,5 +1,10 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  buildSlayerRateLimitHeaders,
+  checkSlayerRateLimit,
+  getSlayerQuotaIdentity,
+} from "../_lib/rate-limit";
 
 
 
@@ -45,16 +50,41 @@ export async function GET(req: NextRequest) {
 
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const requireRemoteOptimization =
-      body?.requireRemoteOptimization === true ||
-      process.env.REQUIRE_REMOTE_OPTIMIZER === "true";
+   const userAgent = request.headers.get("User-Agent") || "Unknown";
+   const clientIp = request.headers.get("X-Forwarded-For") || "Unknown";
+   console.log(`Received POST request to /api/slayer from IP: ${clientIp}, User-Agent: ${userAgent}`);
 
+    
+  
+  try {
     const token = request.headers.get("Authorization")?.trim();
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rateLimitIdentity = getSlayerQuotaIdentity(request);
+    const rateLimitResult = checkSlayerRateLimit(rateLimitIdentity.key);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          message: "You can submit 2 Slayer requests every 2 hours.",
+        },
+        {
+          status: 429,
+          headers: buildSlayerRateLimitHeaders(
+            rateLimitResult.retryAfterSeconds,
+            rateLimitResult.resetAt
+          ),
+        }
+      );
+    }
+
+    const body = await request.json();
+    const requireRemoteOptimization =
+      body?.requireRemoteOptimization === true ||
+      process.env.REQUIRE_REMOTE_OPTIMIZER === "true";
 
     const { resumeText, jobDescription, jobURL } = body;
     const effectiveJobDescription = jobDescription || jobURL;
@@ -71,6 +101,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-slayer-internal": "1",
       },
       body: JSON.stringify({
         resumeText,

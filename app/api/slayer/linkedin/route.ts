@@ -1,7 +1,36 @@
 import { NextResponse } from "next/server";
+import {
+  buildSlayerRateLimitHeaders,
+  checkSlayerRateLimit,
+  getSlayerQuotaIdentity,
+} from "../../_lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const token = req.headers.get("Authorization")?.trim();
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimitIdentity = getSlayerQuotaIdentity(req);
+    const rateLimitResult = checkSlayerRateLimit(rateLimitIdentity.key);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          message: "You can submit 2 Slayer requests every 2 hours.",
+        },
+        {
+          status: 429,
+          headers: buildSlayerRateLimitHeaders(
+            rateLimitResult.retryAfterSeconds,
+            rateLimitResult.resetAt
+          ),
+        }
+      );
+    }
+
     const body = await req.json();
     const { resumeText } = body;
     const jobDescription = body.targetProfile || body.jobDescription;
