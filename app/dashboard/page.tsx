@@ -19,6 +19,10 @@ import {
   CalendarDays
 } from "lucide-react";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { useUserInfoStore } from "@/store/userInfo";
+
+
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -27,11 +31,34 @@ export default function DashboardPage() {
     recentSlays: [] as SlayType[]
   });
   const [loading, setLoading] = useState(true);
+  const token = getToken();
+
+  const fetchUserInfo = async ()=>{
+    try{
+   const res = await axios.get('/api/user', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if(res.status === 200){
+      const data = res.data;
+      console.log("User info fetched successfully:", data);
+      useUserInfoStore.setState({ id: data.id, name: data.name, email: data.email, role: data.role, avatarUrl: data?.avatarUrl });
+    }
+    else{
+      console.error("Failed to fetch user info, status:", res.status);
+    }
+    }
+    catch(e){
+      console.error("Error fetching user info:", e);
+    }
+  }
+   
+ 
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = getToken();
+      
         if (!token) return;
 
         const res = await fetch('/api/slayer?size=5', {
@@ -59,6 +86,7 @@ export default function DashboardPage() {
       }
     };
 
+    fetchUserInfo();
     fetchDashboardData();
   }, []);
 
