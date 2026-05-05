@@ -17,7 +17,7 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-10 text-xs font-black uppercase tracking-widest text-gray-400">
           <Link href="/#features" className="hover:text-white transition-colors">Features</Link>
-          <Link href="/#success" className="hover:text-white transition-colors">Success</Link>
+          <Link href="#success" className="hover:text-white transition-colors">Success</Link>
           <Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link>
           <Link href="/dashboard" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors">
             <Sparkles className="w-3.5 h-3.5" />
