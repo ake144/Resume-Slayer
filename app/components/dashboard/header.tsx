@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserInfoStore } from "@/store/userInfo";
 import { clearAuth } from "@/utils/common";
-import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
+import { Menu, Search, Bell, ChevronDown, LogOut } from "lucide-react";
 
-export function Header() {
+type HeaderProps = {
+  onMenuClick?: () => void;
+};
+
+export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const profileRef = useRef<HTMLDivElement>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -32,10 +36,24 @@ export function Header() {
   };
 
   return (
-    <header className="h-20 bg-[#050505] border-b border-gray-800/50 flex items-center justify-between px-8 sticky top-0 z-40">
+    <header className="h-16 lg:h-20 bg-[#050505]/95 border-b border-gray-800/50 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-40 backdrop-blur-md">
+      <div className="flex items-center gap-3 md:gap-4">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="lg:hidden w-10 h-10 rounded-xl border border-gray-800 bg-[#111118] text-gray-300 hover:text-white hover:border-blue-500/40 transition-colors flex items-center justify-center"
+          aria-label="Open sidebar"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="md:hidden">
+          <p className="text-sm font-semibold text-white">Dashboard</p>
+        </div>
+      </div>
       
       {/* Search Input */}
-      <div className="relative w-96 max-w-md hidden md:block">
+      <div className="relative w-full max-w-md hidden md:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input 
           type="text" 
@@ -45,13 +63,13 @@ export function Header() {
       </div>
 
       {/* Right Area */}
-      <div className="flex items-center gap-6 ml-auto">
+      <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 ml-auto">
         <button className="relative text-gray-400 hover:text-white transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full border-2 border-[#050505]"></span>
         </button>
         
-        <div ref={profileRef} className="relative pl-6 border-l border-gray-800/50">
+        <div ref={profileRef} className="relative pl-3 sm:pl-4 lg:pl-6 border-l border-gray-800/50">
           <button
             type="button"
             onClick={() => setShowProfileMenu((value) => !value)}
@@ -63,13 +81,13 @@ export function Header() {
               <p className="text-sm font-semibold text-white leading-tight group-hover:text-blue-300 transition-colors">{name}</p>
               <p className="text-xs text-gray-500">{role}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="w-9 h-9 rounded-full bg-linear-to-tr from-blue-600 to-purple-600 flex items-center justify-center p-0.5">
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-sm font-bold overflow-hidden">
                   <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=transparent" alt="avatar" className="w-full h-full object-cover" />
                 </div>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showProfileMenu ? "rotate-180 text-white" : ""}`} />
+              <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-500 transition-transform ${showProfileMenu ? "rotate-180 text-white" : ""}`} />
             </div>
           </button>
 

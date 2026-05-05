@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  X,
   Zap,
   Map,
   History,
@@ -16,7 +17,12 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 
-export function Sidebar() {
+type SidebarProps = {
+  isMobileOpen: boolean;
+  onCloseMobile: () => void;
+};
+
+export function Sidebar({ isMobileOpen, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -68,18 +74,33 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 fixed inset-y-0 left-0 bg-[#060608] border-r border-[#1a1a24] flex flex-col z-50">
+    <aside
+      className={clsx(
+        "w-72 lg:w-64 fixed inset-y-0 left-0 bg-[#060608] border-r border-[#1a1a24] flex flex-col z-50 transform transition-transform duration-300 ease-out",
+        "-translate-x-full lg:translate-x-0",
+        isMobileOpen ? "translate-x-0" : ""
+      )}
+    >
       {/* Search / Brand Area */}
-      <div className="h-20 flex items-center px-6 border-b border-[#1a1a24] bg-[#0a0a0e]">
+      <div className="h-20 flex items-center justify-between px-5 lg:px-6 border-b border-[#1a1a24] bg-[#0a0a0e]">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform duration-300">
+          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform duration-300">
             <Zap className="w-5 h-5 text-white fill-white" />
           </div>
           <div>
-            <h1 className="font-bold text-[15px] bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-gray-400 leading-tight">Resume Slayer</h1>
+            <h1 className="font-bold text-[15px] bg-clip-text text-transparent bg-linear-to-r from-gray-100 to-gray-400 leading-tight">Resume Slayer</h1>
             <p className="text-[11px] text-blue-400/80 font-semibold tracking-wide uppercase mt-0.5">Elite Access</p>
           </div>
         </Link>
+
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="lg:hidden w-9 h-9 rounded-lg border border-[#2a2a3a] bg-[#111118] text-gray-300 hover:text-white hover:border-blue-500/40 transition-colors flex items-center justify-center"
+          aria-label="Close sidebar"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -96,6 +117,7 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={onCloseMobile}
                     className={clsx(
                       "group flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200",
                       active
@@ -129,9 +151,10 @@ export function Sidebar() {
       <div className="p-4 border-t border-[#1a1a24] bg-[#0a0a0e]/50 backdrop-blur-sm">
         <Link
           href="/dashboard/workspace"
-          className="w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:shadow-[0_0_25px_rgba(37,99,235,0.3)] border border-blue-500/30"
+          onClick={onCloseMobile}
+          className="w-full relative group overflow-hidden bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:shadow-[0_0_25px_rgba(37,99,235,0.3)] border border-blue-500/30"
         >
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+          <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
           <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 duration-300" />
           New Slay
         </Link>
