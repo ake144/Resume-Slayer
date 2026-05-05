@@ -508,10 +508,13 @@ export default function SlayDetailPage() {
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center mb-4">
               <Palette className="w-5 h-5 text-pink-400 mr-2" />
-              <h3 className="font-semibold text-white">Resume Template</h3>
+              <h3 className="font-semibold text-white">Resume Template
+                <span className="ml-2 text-xs text-green-400 font-normal"> (coming soon)</span>
+              </h3>
             </div>
             <div className="space-y-3">
               <select 
+                disabled
                 value={activeTemplate}
                 onChange={(e) => setActiveTemplate(e.target.value as any)}
                 className="w-full bg-[#131315] border border-gray-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-pink-500/50 outline-none transition-all"
@@ -526,12 +529,15 @@ export default function SlayDetailPage() {
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center mb-4">
               <Briefcase className="w-5 h-5 text-blue-400 mr-2" />
-              <h3 className="font-semibold text-white">Quick Actions</h3>
+              <h3 className="font-semibold text-white">Quick Actions
+                  <span className="ml-2 text-xs text-green-400 font-normal"> (coming soon)</span>
+              </h3>
             </div>
             <div className="space-y-3">
               <button 
                 onClick={handleDownloadPdf}
-                disabled={activeTab !== 'optimized' || !slay.optimizedResume}
+               disabled
+                // disabled={activeTab !== 'optimized' || !slay.optimizedResume}
                 className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex justify-center items-center mb-3"
               >
                 <Download className="w-4 h-4 mr-2" />

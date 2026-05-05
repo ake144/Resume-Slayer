@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 export function Hero() {
   return (
@@ -83,43 +84,42 @@ export function Hero() {
           {/* Decorative Glow */}
           <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full" />
           
-          <div className="relative w-full max-w-lg aspect-[8.5/11] bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-800 p-8 transform rotate-2 hover:rotate-0 transition-transform duration-500">
-            {/* Fake Resume Content */}
-            <div className="w-full h-full flex flex-col gap-4 opacity-50">
-              <div className="h-6 w-1/3 bg-gray-300 rounded" />
-              <div className="h-4 w-1/4 bg-gray-200 rounded" />
-              <div className="space-y-2 mt-4">
-                <div className="h-3 w-full bg-gray-200 rounded" />
-                <div className="h-3 w-full bg-gray-200 rounded" />
-                <div className="h-3 w-4/5 bg-gray-200 rounded" />
-              </div>
-              <div className="space-y-2 mt-6">
-                <div className="h-4 w-1/4 bg-gray-300 rounded" />
-                <div className="h-3 w-full bg-gray-200 rounded" />
-                <div className="h-3 w-full bg-gray-200 rounded" />
-                <div className="h-3 w-5/6 bg-gray-200 rounded" />
-              </div>
-            </div>
-            
-            {/* Overlay Score Card */}
-            <motion.div 
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, type: "spring" }}
-              className="absolute bottom-8 -left-8 right-8 bg-[#111] border border-gray-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl flex items-center justify-between"
-            >
-              <div>
-                <p className="text-blue-500 text-xs font-bold tracking-wider mb-1">ATS COMPATIBILITY SCORE</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-white">98</span>
-                  <span className="text-xl text-gray-500 font-bold">/100</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7 text-green-500" />
-              </div>
-            </motion.div>
-          </div>
+          <div className="relative group">
+  {/* Glow Effect */}
+  <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full" />
+  
+  {/* CHANGED: max-w-lg to max-w-4xl, and aspect-[8.5/11] to aspect-video (16:9) */}
+  <div className="relative w-full max-w-4xl aspect-video bg-[#0a0a0a] rounded-lg shadow-2xl overflow-hidden border border-gray-800 p-0 transform rotate-2 hover:rotate-0 transition-transform duration-500">
+    
+    {/* Dashboard Image */}
+    <Image
+      src="/dash1.png"
+      alt="Dashboard Showcase"
+      className="w-full h-full object-cover rounded-lg"
+      width={1200} // Increased base resolution numbers for wide layout
+      height={675}
+    />
+    
+    {/* Overlay Score Card */}
+    <motion.div 
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.6, type: "spring" }}
+      className="absolute bottom-6 left-6 md:bottom-8 md:left-8 bg-[#111]/90 border border-gray-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-6"
+    >
+      <div>
+        <p className="text-blue-500 text-xs font-bold tracking-wider mb-1">ATS COMPATIBILITY SCORE</p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-black text-white">98</span>
+          <span className="text-xl text-gray-500 font-bold">/100</span>
+        </div>
+      </div>
+      <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+        <CheckCircle2 className="w-7 h-7 text-green-500" />
+      </div>
+    </motion.div>
+  </div>
+</div>
         </motion.div>
       </div>
     </section>
