@@ -23,6 +23,18 @@ const features = [
     icon: <ShieldCheck className="w-6 h-6 text-green-500" />,
     title: "Trap Detection",
     description: "Automatically identify and fix common resume 'traps' that cause automatic rejections by ATS systems."
+  },
+  {
+    icon: <Sparkles className="w-6 h-6 text-pink-500" />,
+    title: "AI Resume Builder",
+    description: "Create a beautiful, tech-focused resume from scratch in minutes using our AI-driven intelligent builder.",
+    comingSoon: true
+  },
+  {
+    icon: <Target className="w-6 h-6 text-cyan-500" />,
+    title: "1-Click Auto Apply",
+    description: "Instantly tailor your existing resume to specific job postings and submit applications with a single click.",
+    comingSoon: true
   }
 ];
 
@@ -81,7 +93,7 @@ export function Features() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, i) => (
             <motion.div
               key={i}
@@ -89,13 +101,20 @@ export function Features() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-10 hover:bg-white/[0.02] transition-all group"
+              className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-10 hover:bg-white/2 transition-all group relative overflow-hidden flex flex-col"
             >
+              {feature.comingSoon && (
+                <div className="absolute top-8 right-8">
+                  <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
+                    Coming Soon
+                  </span>
+                </div>
+              )}
               <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform">
                 {feature.icon}
               </div>
               <h3 className="text-2xl font-black mb-4 text-white">{feature.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">
+              <p className="text-gray-500 text-sm leading-relaxed flex-1">
                 {feature.description}
               </p>
             </motion.div>
