@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await axios.get("http://localhost:8080/api/slayer", {
+    const response = await axios.get("https://cv-production-3fe6.up.railway.app/api/slayer", {
       params: {
         page,
         size
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
     };
 
     const response = await axios.post(
-      "http://localhost:8080/api/slayer",
+      "https://cv-production-3fe6.up.railway.app/api/slayer",
       backendPayload,
       {
         headers: {

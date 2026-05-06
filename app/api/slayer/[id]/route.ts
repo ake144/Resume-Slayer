@@ -15,7 +15,7 @@ export async function GET(
     const resolvedParams = await params;
     
     // Attempt to fetch specific ID from backend
-    const response = await axios.get(`http://localhost:8080/api/slayer/${resolvedParams.id}`, {
+    const response = await axios.get(`https://cv-production-3fe6.up.railway.app/api/slayer/${resolvedParams.id}`, {
       headers: {
         Authorization: token
       }

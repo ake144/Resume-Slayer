@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     try {
       // Connects to your Spring Boot backend on port 8080 (update if different)
-      const response = await Axios.post("http://localhost:8080/api/auth/login", formData);
+      const response = await Axios.post("https://cv-production-3fe6.up.railway.app/api/auth/login", formData);
       
       if (response.status === 200) {
         const token = response.data;

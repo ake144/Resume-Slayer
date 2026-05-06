@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await axios.get("http://localhost:8080/api/user",
+    const response = await axios.get("https://cv-production-3fe6.up.railway.app/api/user",
     { headers: {
         Authorization: `${token}`
       } }

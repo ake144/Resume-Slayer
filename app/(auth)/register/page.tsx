@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
     try {
       // Connects to your Spring Boot backend on port 8080 (update if different)
-      const response = await Axios.post("http://localhost:8080/api/auth/register", formData);
+      const response = await Axios.post("https://cv-production-3fe6.up.railway.app/api/auth/register", formData);
       
       if (response.status === 200) {
         setSuccess("Registration successful! You can now log in.");
