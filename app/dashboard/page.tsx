@@ -91,7 +91,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4 sm:px-6 lg:px-8 mt-4 md:mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -108,7 +108,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl font-black tracking-tight text-white"
+            className="text-4xl md:text-5xl font-black tracking-tight text-white"
           >
             Your Command Center<span className="text-blue-600">.</span>
           </motion.h1>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
         <Link
           href="/dashboard/workspace"
-          className="group relative overflow-hidden bg-white text-black font-black px-8 py-4 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-white/10 flex items-center gap-3"
+          className="group relative overflow-hidden bg-white text-black font-black px-8 py-4 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-white/10 flex items-center justify-center gap-3 w-full md:w-auto text-center"
         >
           <Zap className="w-5 h-5 fill-black" />
           Start New Slay

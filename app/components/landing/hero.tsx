@@ -13,7 +13,7 @@ export function Hero() {
       <ContainerScroll
         titleComponent={
           <>
-          <div className="flex items-center justify-center flex-col gap-6 relative z-10">
+          <div className="flex items-center justify-center flex-col gap-6 relative z-10 px-4 md:px-0">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -27,13 +27,14 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-3xl md:text-6xl font-bold tracking-tight leading-[1.1]"
+            className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.2]"
           >
             <LayoutTextFlip
-              text="Get an"
-              words={["unfair advantage", "the edge", "ahead of the pack", "competitive edge"]}
+              text="Gain"
+              words={["an unfair advantage", "a competitive edge", "top-tier visibility", "unstoppable momentum"]}
             />
-              In<br />Your Job Hunt
+            <br />
+            In Your Job Hunt
           </motion.h1>
 
           <motion.p 
@@ -49,12 +50,12 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-wrap items-center gap-4 mt-2"
+            className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2 w-full sm:w-auto px-4 sm:px-0"
           >
-            <a href="/dashboard/workspace" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg shadow-blue-600/20">
+            <a href="/dashboard/workspace" className="inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg shadow-blue-600/20 text-center">
               Start Slaying for Free
             </a>
-            <button className="bg-transparent border border-gray-700 hover:border-gray-500 text-white px-8 py-4 rounded-full font-bold transition-all">
+            <button className="bg-transparent w-full sm:w-auto border border-gray-700 hover:border-gray-500 text-white px-8 py-4 rounded-full font-bold transition-all text-center">
               View Sample Resumes
             </button>
           </motion.div>
