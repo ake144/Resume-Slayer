@@ -42,7 +42,7 @@ export function Features() {
   return (
     <section className="py-32 bg-[#050505] text-white" id="features">
 
-      {/* Stats Section */}
+     
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 mb-40 border-b border-white/5 pb-20">
         {[
           { label: "Success Rate", value: "98%", boost: "+25%" },
@@ -122,7 +122,6 @@ export function Features() {
         </div>
       </div>
 
-      {/* Logos */}
       <div className="max-w-7xl mx-auto px-6 mt-40 text-center border-t border-white/5 pt-20">
         <p className="text-[10px] font-black tracking-[0.3em] text-gray-600 uppercase mb-12">
           Trusted by professionals at top tech companies

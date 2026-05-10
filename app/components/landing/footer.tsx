@@ -3,7 +3,7 @@ export function Footer() {
     <footer className="bg-[#050505] text-white pt-24 pb-12 border-t border-gray-900">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Bottom CTA */}
+      
         <div className="bg-blue-600 rounded-[2rem] p-12 md:p-20 text-center relative overflow-hidden mb-32 z-10">
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-700 to-transparent opacity-50 blur-2xl z-0" />
           <div className="relative z-10">
@@ -23,7 +23,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Footer Top */}
+       
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           <div className="md:col-span-5 pr-8">
             <div className="flex items-center gap-3 mb-6">
