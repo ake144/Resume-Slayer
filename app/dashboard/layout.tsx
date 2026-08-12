@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/dashboard/sidebar";
 import { Header } from "../components/dashboard/header";
-import { getValidToken, clearAuth } from "@/utils/common";
+import { getApiKey, clearAuth } from "@/utils/common";
+import { api } from "@/lib/api";
+import { RefreshCw } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -14,14 +16,31 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const t = getValidToken();
-    if (!t) {
+    const key = getApiKey();
+    if (!key) {
       clearAuth();
       router.push('/login');
+      return;
     }
+
+    api.getMe()
+      .then(() => setChecked(true))
+      .catch(() => {
+        clearAuth();
+        router.push('/login');
+      });
   }, [router]);
+
+  if (!checked) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans antialiased flex">

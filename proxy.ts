@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from './utils/common'
- 
+import { getApiKey } from './utils/common'
+
 const protectedRoutes = ['/home', '/dashboard', '/profile']
 
 export function proxy(request: NextRequest) {
-    const token = getToken()
+    const token = getApiKey()
     if (!token) {
         return NextResponse.redirect(new URL('/login', request.url))
     }

@@ -16,7 +16,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const name = useUserInfoStore((state) => state.name);
-  const role = useUserInfoStore((state) => state.role);
+  const email = useUserInfoStore((state) => state.email);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,7 +52,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
       </div>
       
-      {/* Search Input */}
+     
       <div className="relative w-full max-w-md hidden md:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input 
@@ -62,7 +62,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         />
       </div>
 
-      {/* Right Area */}
+    
       <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 ml-auto">
         <button className="relative text-gray-400 hover:text-white transition-colors">
           <Bell className="w-5 h-5" />
@@ -78,8 +78,8 @@ export function Header({ onMenuClick }: HeaderProps) {
             aria-expanded={showProfileMenu}
           >
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-white leading-tight group-hover:text-blue-300 transition-colors">{name}</p>
-              <p className="text-xs text-gray-500">{role}</p>
+              <p className="text-sm font-semibold text-white leading-tight group-hover:text-blue-300 transition-colors">{name || "Slayer"}</p>
+              <p className="text-xs text-gray-500">{email}</p>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="w-9 h-9 rounded-full bg-linear-to-tr from-blue-600 to-purple-600 flex items-center justify-center p-0.5">

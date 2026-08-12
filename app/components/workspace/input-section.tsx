@@ -1,18 +1,24 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadCloud, FileText, CheckCircle2, Zap, Target, Sparkles, ArrowRight, Info, RefreshCw } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle2, Zap, Target, Sparkles, ArrowRight, Info, RefreshCw, X } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import Axios from "axios";
+import { useRouter } from "next/navigation";
 import { useResumeStore } from "@/store/useResumeStore";
+import { api } from "@/lib/api";
 
-export function InputSection({ token }: { token: string }) {
+export function InputSection() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("paste");
   const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [resumeText, setResumeText] = useState("");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [jobURL, setJobURL] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStep, setSubmitStep] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mounted = useRef(false);
   useEffect(() => {
@@ -27,45 +33,67 @@ export function InputSection({ token }: { token: string }) {
     setStoredResume(e.target.value);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setResumeFile(e.target.files?.[0] ?? null);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) setResumeFile(dropped);
+  };
+
   const submitData = async () => {
-    if (!resumeText) {
+    if (activeTab === "paste" && !resumeText) {
       alert("Please paste your resume text first!");
       return;
     }
-
-    if (!jobDescription && !jobURL) {
-      alert("Please provide a job description or job URL.");
+    if (activeTab === "upload" && !resumeFile) {
+      alert("Please choose a resume file first!");
+      return;
+    }
+    if (!jobTitle) {
+      alert("Please provide a job title.");
+      return;
+    }
+    if (!jobDescription) {
+      alert("Please paste the job description - a URL alone isn't enough for us to analyze the role.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await Axios.post("/api/slayer", {
-        resumeText,
-        jobDescription,
-        jobURL
-      }, {
-        headers: {
-          'Authorization': `${token}`
-        }
+      setSubmitStep("Ingesting your resume...");
+      const resumeFormData = new FormData();
+      resumeFormData.append("title", "My Resume");
+      if (activeTab === "upload" && resumeFile) {
+        resumeFormData.append("file", resumeFile);
+      } else {
+        resumeFormData.append("text", resumeText);
+      }
+      await api.ingestResume(resumeFormData);
+
+      setSubmitStep("Analyzing the job posting...");
+      const job = await api.ingestJob({
+        job_text: jobDescription,
+        title: jobTitle,
+        source_url: jobURL || undefined,
       });
 
-      if (response.status === 200) {
-        const data = response.data;
-        const slayId = data?.slayId;
-        if (slayId) {
-          window.location.href = `/dashboard/slays/${slayId}`;
-        } else {
-          window.location.href = `/dashboard`;
-        }
-      } else {
-        alert("Failed to submit data.");
-      }
+      setSubmitStep("Generating your tailored application...");
+      const result = await api.runWorkflow({
+        job_description: jobDescription,
+        job_title: jobTitle,
+        job_posting_id: job.job_posting_id,
+      });
+
+      router.push(`/dashboard/slays/${result.id}`);
     } catch (error) {
       console.error("Error submitting data", error);
-      alert("Integration request failed. Make sure the backend is running.");
+      alert("Something went wrong. Make sure the backend is running and try again.");
     } finally {
       setIsSubmitting(false);
+      setSubmitStep("");
     }
   };
 
@@ -166,13 +194,37 @@ export function InputSection({ token }: { token: string }) {
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
-                      className="border-2 border-dashed border-white/10 hover:border-blue-500/30 bg-black/50 rounded-3xl p-16 flex flex-col items-center justify-center text-center transition-all cursor-pointer group/upload"
                     >
-                      <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover/upload:scale-110 transition-transform">
-                        <UploadCloud className="w-8 h-8 text-blue-500" />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.txt"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleDrop}
+                        className="border-2 border-dashed border-white/10 hover:border-blue-500/30 bg-black/50 rounded-3xl p-16 flex flex-col items-center justify-center text-center transition-all cursor-pointer group/upload"
+                      >
+                        <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover/upload:scale-110 transition-transform">
+                          <UploadCloud className="w-8 h-8 text-blue-500" />
+                        </div>
+                        {resumeFile ? (
+                          <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-sm text-gray-200">{resumeFile.name}</span>
+                            <button onClick={() => setResumeFile(null)} className="text-gray-500 hover:text-white">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-400 mb-2">Drag and drop your resume here, or <span className="text-blue-500 font-bold">browse files</span></p>
+                            <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">Supports PDF, TXT</p>
+                          </>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">Drag and drop your PDF here, or <span className="text-blue-500 font-bold">browse files</span></p>
-                      <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">Supports PDF, DOCX (Max 5MB)</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -192,21 +244,21 @@ export function InputSection({ token }: { token: string }) {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all placeholder:text-gray-700"
-                      placeholder="Paste Job URL (LinkedIn, Greenhouse, etc.)"
-                      value={jobURL}
-                      onChange={(e) => setJobURL(e.target.value)}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all placeholder:text-gray-700"
+                    placeholder="Job Title (e.g. Senior Backend Engineer)"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                  />
 
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-white/5"></div>
-                    <span className="flex-shrink-0 mx-6 text-gray-700 text-[10px] font-black uppercase tracking-[0.3em]">OR</span>
-                    <div className="flex-grow border-t border-white/5"></div>
-                  </div>
+                  <input
+                    type="text"
+                    className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all placeholder:text-gray-700"
+                    placeholder="Job URL (optional, for reference)"
+                    value={jobURL}
+                    onChange={(e) => setJobURL(e.target.value)}
+                  />
 
                   <textarea
                     className="w-full h-40 bg-black/50 border border-white/10 rounded-3xl p-6 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all resize-none placeholder:text-gray-700"
@@ -228,7 +280,7 @@ export function InputSection({ token }: { token: string }) {
                 ) : (
                   <Zap className="w-6 h-6 fill-white" />
                 )}
-                {isSubmitting ? "Slaying in Progress..." : "Slay My Resume"}
+                {isSubmitting ? (submitStep || "Slaying in Progress...") : "Slay My Resume"}
                 {!isSubmitting && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               </button>
             </motion.div>
@@ -258,8 +310,8 @@ export function InputSection({ token }: { token: string }) {
                   <div className="space-y-4 pt-4">
                     {[
                       { title: "Deep Job Analysis", desc: "Extracting hidden requirements and intent." },
-                      { title: "ATS Optimization", desc: "Bypassing filters with perfect parsing structure." },
-                      { title: "Skill Gap Roadmap", desc: "Actionable plans to bridge missing expertise." }
+                      { title: "Match Scoring", desc: "Grounded fit analysis, not just keyword matching." },
+                      { title: "Skill Gap Insights", desc: "Actionable recommendations to bridge missing expertise." }
                     ].map((step, i) => (
                       <div key={i} className="flex gap-4">
                         <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-[10px] font-black border border-white/20">

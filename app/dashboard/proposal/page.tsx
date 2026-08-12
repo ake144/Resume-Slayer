@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { FileText, Sparkles, Copy, Mail, RefreshCw, Briefcase, ChevronRight, Send } from "lucide-react";
+import { FileText, Sparkles, Copy, RefreshCw, Briefcase, ChevronRight, Send } from "lucide-react";
 import { useResumeStore } from "@/store/useResumeStore";
+import { api } from "@/lib/api";
 
 export default function GenericProposalPage() {
   const { resumeText: storedResume, setResumeText: setStoredResume } = useResumeStore();
   const [formData, setFormData] = useState({
     resumeText: "",
+    jobTitle: "",
     jobDescription: "",
   });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,8 +31,8 @@ export default function GenericProposalPage() {
   };
 
   const handleGenerate = async () => {
-    if (!formData.resumeText.trim() || !formData.jobDescription.trim()) {
-      alert("Please provide both your profile/resume and the target's info/job description.");
+    if (!formData.resumeText.trim() || !formData.jobTitle.trim() || !formData.jobDescription.trim()) {
+      alert("Please provide your profile/resume, a title, and the target's info/job description.");
       return;
     }
 
@@ -38,21 +40,20 @@ export default function GenericProposalPage() {
     setGeneratedProposal(null);
 
     try {
-      const response = await fetch("/api/slayer/proposal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const resumeFormData = new FormData();
+      resumeFormData.append("title", "My Resume");
+      resumeFormData.append("text", formData.resumeText);
+      await api.ingestResume(resumeFormData);
 
-      if (response.ok) {
-        const data = await response.json();
-        setGeneratedProposal(data.proposal);
-      } else {
-        alert("Failed to generate Proposal. Please try again.");
-      }
+      const result = await api.generateApplication({
+        job_description: formData.jobDescription,
+        job_title: formData.jobTitle,
+        application_type: "cold_pitch",
+      });
+      setGeneratedProposal(result.content);
     } catch (error) {
       console.error(error);
-      alert("An error occurred during generation.");
+      alert("Failed to generate Proposal. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -100,13 +101,20 @@ export default function GenericProposalPage() {
              </div>
           </div>
 
-          <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg">
-            <label className="flex items-center text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+          <div className="bg-[#0a0a0c] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 shadow-lg space-y-4">
+            <label className="flex items-center text-sm font-semibold text-gray-300 uppercase tracking-wide">
               <Briefcase className="w-4 h-4 mr-2 text-amber-500" />
-              2. Target Project / Job Description
+              2. Target Project / Job
             </label>
+            <input
+              type="text"
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-3 text-sm text-gray-300 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all placeholder:text-gray-600"
+              placeholder="Title (e.g. Full-Stack Developer, Acme Inc.)"
+              value={formData.jobTitle}
+              onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+            />
             <textarea
-              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all min-h-[220px] resize-y placeholder:text-gray-600"
+              className="w-full bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all min-h-[190px] resize-y placeholder:text-gray-600"
               placeholder="Paste the details of the job listing, client website, or gig you're aiming for..."
               value={formData.jobDescription}
               onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
@@ -115,7 +123,7 @@ export default function GenericProposalPage() {
 
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || !formData.resumeText || !formData.jobDescription}
+            disabled={isGenerating || !formData.resumeText || !formData.jobTitle || !formData.jobDescription}
             className="w-full relative group overflow-hidden bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-600/20 transition-all flex items-center justify-center gap-2"
           >
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
@@ -163,7 +171,7 @@ export default function GenericProposalPage() {
           </div>
         </div>
       </div>
-      
+
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes shimmer {
           100% { transform: translateX(100%); }

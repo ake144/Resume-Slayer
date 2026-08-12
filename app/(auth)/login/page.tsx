@@ -2,43 +2,36 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import Axios from "axios";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { getApiKey, setApiKey, clearAuth } from "@/utils/common";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [apiKeyInput, setApiKeyInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    const previousKey = getApiKey();
+    setApiKey(apiKeyInput.trim());
+
     try {
-      // Connects to your Spring Boot backend on port 8080 (update if different)
-      const response = await Axios.post("https://cv-production-3fe6.up.railway.app/api/auth/login", formData);
-      
-      if (response.status === 200) {
-        const token = response.data;
-        // Basic example: store token in localStorage
-        localStorage.setItem("token", token);
-        
-        // Redirect to dashboard
-        router.push("/dashboard");
-      }
-    } catch (err: any) {
+      await api.getMe();
+      router.push("/dashboard");
+    } catch (err) {
       console.error(err);
-      setError(err.response?.data || "Invalid email or password.");
+      if (previousKey) {
+        setApiKey(previousKey);
+      } else {
+        clearAuth();
+      }
+      setError("Invalid API key. Double-check what you pasted and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -55,51 +48,34 @@ export default function LoginPage() {
 
       <div className="bg-[#111] border border-gray-800 rounded-2xl p-8 w-full max-w-md shadow-2xl">
         <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-        <p className="text-gray-400 text-sm mb-6">Enter your details to access your dashboard.</p>
+        <p className="text-gray-400 text-sm mb-6">Paste your API key to access your dashboard.</p>
 
         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
-            <input 
-              type="email" 
-              name="email"
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">API Key</label>
+            <textarea
               required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-gray-600"
-              placeholder="john@example.com"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              rows={2}
+              className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-gray-600 resize-none"
+              placeholder="rsag_..."
             />
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-gray-300">Password</label>
-              <a href="#" className="text-xs text-blue-500 hover:underline">Forgot password?</a>
-            </div>
-            <input 
-              type="password" 
-              name="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-gray-600"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={isLoading}
+          <button
+            type="submit"
+            disabled={isLoading || !apiKeyInput.trim()}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all mt-4"
           >
-            {isLoading ? "Signing in..." : "Log In"}
+            {isLoading ? "Verifying..." : "Log In"}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-400">
-          Don't have an account? <Link href="/register" className="text-blue-500 hover:underline font-medium">Sign up</Link>
+          Don&apos;t have an account? <Link href="/register" className="text-blue-500 hover:underline font-medium">Sign up</Link>
         </div>
       </div>
     </div>

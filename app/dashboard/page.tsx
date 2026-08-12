@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { getToken } from "@/utils/common";
-import { SlayType } from "@/utils/types";
+import { Application } from "@/utils/types";
 import Link from "next/link";
 import {
   Zap,
@@ -15,70 +14,44 @@ import {
   Clock,
   ChevronRight,
   FileText,
-  Briefcase,
   CalendarDays
 } from "lucide-react";
 import { motion } from "framer-motion";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { useUserInfoStore } from "@/store/userInfo";
 
 
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
-    totalSlays: 0,
+    totalApplications: 0,
     avgScore: 0,
-    recentSlays: [] as SlayType[]
+    recentApplications: [] as Application[]
   });
   const [loading, setLoading] = useState(true);
-  const token = getToken();
-
-  const fetchUserInfo = async ()=>{
-    try{
-   const res = await axios.get('/api/user', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if(res.status === 200){
-      const data = res.data;
-      console.log("User info fetched successfully:", data);
-      useUserInfoStore.setState({ id: data.id, name: data.name, email: data.email, role: data.role, avatarUrl: data?.avatarUrl });
-    }
-    else{
-      console.error("Failed to fetch user info, status:", res.status);
-    }
-    }
-    catch(e){
-      console.error("Error fetching user info:", e);
-    }
-  }
-   
- 
 
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const [me, profile] = await Promise.all([api.getMe(), api.getProfile()]);
+        useUserInfoStore.setState({ id: me.id, name: profile.full_name || "", email: me.email });
+      } catch (e) {
+        console.error("Error fetching user info:", e);
+      }
+    };
+
     const fetchDashboardData = async () => {
       try {
-      
-        if (!token) return;
+        const data = await api.listApplications(0, 5);
+        const content = data.content || [];
+        const scores = content.map((a) => a.match_score ?? 0);
+        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-        const res = await fetch('/api/slayer?size=5', {
-          headers: { Authorization: `Bearer ${token}` }
+        setStats({
+          totalApplications: data.totalItems || 0,
+          avgScore: avg,
+          recentApplications: content
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          const content = data.content || [];
-
-          // Calculate average score
-          const scores = content.map((s: any) => parseInt(s.atsScore) || 0);
-          const avg = scores.length > 0 ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0;
-
-          setStats({
-            totalSlays: data.totalItems || 0,
-            avgScore: avg,
-            recentSlays: content
-          });
-        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -127,8 +100,8 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Total Optimizations", value: stats.totalSlays, icon: History, color: "blue" },
-          { label: "Average ATS Score", value: `${stats.avgScore}%`, icon: Target, color: "green" },
+          { label: "Total Optimizations", value: stats.totalApplications, icon: History, color: "blue" },
+          { label: "Average Match Score", value: `${stats.avgScore}%`, icon: Target, color: "green" },
           { label: "Success Rate", value: "94%", icon: TrendingUp, color: "purple" }
         ].map((stat, i) => (
           <motion.div
@@ -171,20 +144,20 @@ export default function DashboardPage() {
               [1, 2, 3].map((i) => (
                 <div key={i} className="h-24 bg-white/5 rounded-3xl animate-pulse"></div>
               ))
-            ) : stats.recentSlays.length === 0 ? (
+            ) : stats.recentApplications.length === 0 ? (
               <div className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-12 text-center space-y-4">
                 <p className="text-gray-500 font-medium">No recent activity found.</p>
                 <Link href="/dashboard/workspace" className="text-blue-500 font-bold hover:underline">Start your first slay</Link>
               </div>
             ) : (
-              stats.recentSlays.map((slay, i) => (
+              stats.recentApplications.map((application, i) => (
                 <motion.div
-                  key={slay.id}
+                  key={application.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
                   className="bg-[#0a0a0c] border border-white/5 rounded-[2rem] p-6 hover:bg-white/[0.02] transition-all group cursor-pointer"
-                  onClick={() => window.location.href = `/dashboard/slays/${slay.id}`}
+                  onClick={() => window.location.href = `/dashboard/slays/${application.id}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-5">
@@ -192,18 +165,18 @@ export default function DashboardPage() {
                         <FileText className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{slay.jobTitle}</h4>
+                        <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{application.job_title}</h4>
                         <p className="text-xs text-gray-500 font-medium flex items-center gap-2">
                           <CalendarDays className="w-3 h-3" />
-                          {new Date(slay.createdAt).toLocaleDateString()}
+                          {new Date(application.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right hidden sm:block">
-                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">ATS Score</p>
-                        <p className={`text-lg font-black ${parseInt(slay.atsScore) >= 85 ? 'text-green-400' : 'text-yellow-400'}`}>
-                          {slay.atsScore}
+                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">Match Score</p>
+                        <p className={`text-lg font-black ${(application.match_score ?? 0) >= 85 ? 'text-green-400' : 'text-yellow-400'}`}>
+                          {application.match_score ?? "—"}
                         </p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-600 transition-all">
@@ -231,9 +204,9 @@ export default function DashboardPage() {
                   Did you know that slayed resumes with matching cover letters have a 45% higher response rate?
                 </p>
               </div>
-              <button className="w-full bg-white text-indigo-600 font-black py-3 rounded-xl text-sm hover:bg-indigo-50 transition-colors">
+              <Link href="/dashboard/cover-letter" className="w-full block text-center bg-white text-indigo-600 font-black py-3 rounded-xl text-sm hover:bg-indigo-50 transition-colors">
                 Generate One Now
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -242,7 +215,7 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {[
                 { label: "Complete your profile", icon: CheckCircle2, done: true },
-                { label: "Optimize 3 resumes", icon: Zap, done: stats.totalSlays >= 3 },
+                { label: "Optimize 3 resumes", icon: Zap, done: stats.totalApplications >= 3 },
                 { label: "Generate a roadmap", icon: Target, done: false }
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">

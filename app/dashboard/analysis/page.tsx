@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { getToken } from "@/utils/common";
-import { SlayType } from "@/utils/types";
-import Link from "next/link"; 
+import { api } from "@/lib/api";
+import Link from "next/link";
 import {
   BarChart3,
   TrendingUp,
@@ -32,36 +31,27 @@ export default function AnalysisPage() {
   useEffect(() => {
     const fetchAnalysisData = async () => {
       try {
-        const token = getToken();
-        if (!token) return;
+        const data = await api.listApplications(0, 100);
+        const content = data.content || [];
 
-        const res = await fetch('/api/slayer?size=100', {
-          headers: { Authorization: `Bearer ${token}` }
+        const scores = content.map((a) => a.match_score ?? 0);
+        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+        const distribution = [0, 0, 0, 0];
+        scores.forEach((s) => {
+          if (s < 60) distribution[0]++;
+          else if (s < 75) distribution[1]++;
+          else if (s < 90) distribution[2]++;
+          else distribution[3]++;
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          const content = data.content || [];
-
-          const scores = content.map((s: any) => parseInt(s.atsScore) || 0);
-          const avg = scores.length > 0 ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0;
-
-          const distribution = [0, 0, 0, 0];
-          scores.forEach((s: number) => {
-            if (s < 60) distribution[0]++;
-            else if (s < 75) distribution[1]++;
-            else if (s < 90) distribution[2]++;
-            else distribution[3]++;
-          });
-
-          setStats({
-            totalSlays: data.totalItems || 0,
-            avgScore: avg,
-            topSkills: ["React", "TypeScript", "Node.js", "AWS", "Docker"], // Mocked for now
-            scoreDistribution: distribution,
-            recentImprovement: "+12%"
-          });
-        }
+        setStats({
+          totalSlays: data.totalItems || 0,
+          avgScore: avg,
+          topSkills: ["React", "TypeScript", "Node.js", "AWS", "Docker"], // Mocked for now
+          scoreDistribution: distribution,
+          recentImprovement: "+12%"
+        });
       } catch (e) {
         console.error(e);
       } finally {

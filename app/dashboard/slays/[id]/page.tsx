@@ -2,94 +2,48 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getToken } from "@/utils/common";
-import { SlayType } from "@/utils/types";
+import { api } from "@/lib/api";
+import { ApplicationDetail } from "@/utils/types";
 import Link from "next/link";
-import { ArrowLeft, Clock, CalendarDays, ExternalLink, RefreshCw, BarChart3, Target, Briefcase, FileText, CheckCircle2, Download, Palette } from "lucide-react";
+import { ArrowLeft, CalendarDays, RefreshCw, Target, Briefcase, FileText, CheckCircle2, Download, Palette, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 export default function SlayDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  
-  const [slay, setSlay] = useState<SlayType | null>(null);
+
+  const [application, setApplication] = useState<ApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'optimized' | 'coverLetter'>('optimized');
   const [activeTemplate, setActiveTemplate] = useState<'modern' | 'executive' | 'sidebar'>('modern');
-  
+
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [generatingCL, setGeneratingCL] = useState(false);
 
-  // Load any existing cover letter from local storage
-  useEffect(() => {
-    if (id) {
-      const storedCL = localStorage.getItem(`cover_letter_${id}`);
-      if (storedCL) {
-        setCoverLetter(storedCL);
-      }
-    }
-  }, [id]);
-
   useEffect(() => {
     if (!id) return;
-    
-    const fetchSlay = async () => {
+
+    const fetchApplication = async () => {
       setLoading(true);
       try {
-        const token = getToken();
-        // Since there is no /api/slayer/[id] endpoint on the frontend yet, we can fetch all and find it,
-        // OR rely on the newly created /api/slayer/[id] endpoint.
-        const response = await fetch(`/api/slayer/${id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          let data = await response.json();
-          // If data is a string (double-encoded JSON), parse it
-          if (typeof data === 'string') {
-            try {
-              data = JSON.parse(data);
-            } catch (e) {
-              console.error("Failed to parse data string:", e);
-            }
-          }
-          setSlay(data);
-        } else if (response.status === 404) {
-          // If the specific endpoint doesn't exist on backend, fallback to fetch all
-          const fallbackResp = await fetch('/api/slayer', {
-            headers: { "Authorization": `Bearer ${token}` }
-          });
-          if (fallbackResp.ok) {
-            const result = await fallbackResp.json();
-            const allSlays = Array.isArray(result) ? result : (result.content || []);
-            const found = allSlays.find((s: any) => s.id.toString() === id);
-            if (found) {
-              setSlay(found);
-            } else {
-              setError("Slay not found");
-            }
-          }
-        } else {
-          setError("Failed to fetch details");
-        }
-      } catch (err) {
+        const detail = await api.getApplication(id);
+        setApplication(detail);
+      } catch (err: any) {
         console.error(err);
-        setError("An error occurred");
+        setError(err.response?.status === 404 ? "Slay not found" : "Failed to fetch details");
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchSlay();
+
+    fetchApplication();
   }, [id]);
 
   const parseResume = (md: string) => {
     const sections = { header: "", summary: "", experience: "", education: "", skills: "", others: [] as string[] };
     if (!md) return sections;
-    
+
     // Split by Markdown headers (H2)
     const tokens = md.split(/(?=^##\s)/m);
     tokens.forEach(token => {
@@ -113,58 +67,7 @@ export default function SlayDetailPage() {
     return sections;
   };
 
-  const parsedResume = slay?.optimizedResume ? parseResume(slay.optimizedResume) : null;
-  const roadmapSource = slay?.roadmap ?? slay?.roadMap;
-
-  const roadmapText = (() => {
-    if (!roadmapSource) return "";
-
-    if (Array.isArray(roadmapSource)) {
-      const textCandidate = roadmapSource.find(
-        (item) => typeof item === 'string' && item.trim().length > 0
-      );
-      return textCandidate ? String(textCandidate) : "";
-    }
-
-    if (typeof roadmapSource === 'string') {
-      return roadmapSource;
-    }
-
-    if (typeof roadmapSource === 'object') {
-      return roadmapSource.roadMapText || roadmapSource.roadmapText || "";
-    }
-
-    return "";
-  })();
-
-  const roadmapFocus = (() => {
-    if (!roadmapSource) return [] as string[];
-
-    const normalizeList = (value: unknown) => {
-      if (Array.isArray(value)) {
-        return value.map((item) => String(item).trim()).filter(Boolean);
-      }
-
-      if (typeof value === 'string') {
-        return value
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean);
-      }
-
-      return [] as string[];
-    };
-
-    if (Array.isArray(roadmapSource)) {
-      return normalizeList(roadmapSource[0]);
-    }
-
-    if (typeof roadmapSource === 'object') {
-      return normalizeList(roadmapSource.missingSkills || roadmapSource.goals);
-    }
-
-    return [] as string[];
-  })();
+  const parsedResume = application?.generated_content ? parseResume(application.generated_content) : null;
 
   const styleMaps = {
     modern: {
@@ -220,10 +123,9 @@ export default function SlayDetailPage() {
   const handleDownloadPdf = async () => {
     const element = document.getElementById('resume-content');
     if (!element) return;
-    
-    // Import dynamically to avoid SSR "window is not defined" issues
+
     const html2pdf = (await import('html2pdf.js')).default;
-    
+
     const opt = {
       margin: 10,
       filename: `optimized-resume-${id}.pdf`,
@@ -231,38 +133,32 @@ export default function SlayDetailPage() {
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
     };
-    
+
     html2pdf().set(opt).from(element).save();
   };
 
   const handleGenerateCoverLetter = async () => {
-    if (!slay) return;
+    if (!application) return;
     setActiveTab('coverLetter');
-    
-    // If it's already generated, don't re-generate unless forced (user can just view it)
+
     if (coverLetter && !window.confirm("A cover letter already exists. Generate a new one?")) {
       return;
     }
 
     setGeneratingCL(true);
-    
-    try {
-      const resp = await fetch("/api/slayer/cover-letter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resumeText: slay.optimizedResume,
-          jobDescription: `Job Title: ${slay.jobTitle || 'Unknown'}\nJob URL: ${slay.jobUrl || 'Unknown'} - Please infer the likely job duties from the title and align the cover letter towards it.`,
-        }),
-      });
 
-      if (resp.ok) {
-        const data = await resp.json();
-        setCoverLetter(data.coverLetter);
-        localStorage.setItem(`cover_letter_${id}`, data.coverLetter);
-      } else {
-        console.error("Failed to generate cover letter");
-      }
+    try {
+      const jobContext = application.company
+        ? `Role: ${application.job_title} at ${application.company}. Tailor the cover letter to this role, inferring typical responsibilities from the title.`
+        : `Role: ${application.job_title}. Tailor the cover letter to this role, inferring typical responsibilities from the title.`;
+
+      const result = await api.generateApplication({
+        job_description: jobContext,
+        job_title: application.job_title,
+        application_type: "cover_letter",
+        job_posting_id: application.job_posting_id ?? undefined,
+      });
+      setCoverLetter(result.content);
     } catch (error) {
       console.error(error);
     } finally {
@@ -278,7 +174,7 @@ export default function SlayDetailPage() {
     );
   }
 
-  if (error || !slay) {
+  if (error || !application) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <p className="text-red-400 text-lg">{error || "Slay not found"}</p>
@@ -288,6 +184,8 @@ export default function SlayDetailPage() {
       </div>
     );
   }
+
+  const analysis = application.match_analysis;
 
   return (
     <div className="space-y-6 pb-12">
@@ -299,28 +197,28 @@ export default function SlayDetailPage() {
           </Link>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-400 to-indigo-500">
-              {slay.jobTitle && slay.jobTitle !== 'Unknown Title' ? slay.jobTitle : `Slay #${slay.id}`}
+              {application.job_title || `Slay #${application.id}`}
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
             <div className="flex items-center">
               <CalendarDays className="w-4 h-4 mr-2 text-indigo-400" />
-              {slay.createdAt || 'N/A'}
+              {new Date(application.created_at).toLocaleDateString() || 'N/A'}
             </div>
-            {slay.jobUrl && slay.jobUrl !== 'Unknown URL' && (
-              <a href={slay.jobUrl} target="_blank" rel="noreferrer" className="flex items-center text-blue-400 hover:text-blue-300">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Original Job
-              </a>
+            {application.company && (
+              <div className="flex items-center">
+                <Briefcase className="w-4 h-4 mr-2 text-indigo-400" />
+                {application.company}
+              </div>
             )}
           </div>
         </div>
 
-        {/* ATS Score Card */}
+        {/* Match Score Card */}
         <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-4 min-w-50 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-400 mb-1">ATS Match Score</p>
-            <p className="text-3xl font-bold text-green-400">{slay.atsScore}</p>
+            <p className="text-sm text-gray-400 mb-1">Match Score</p>
+            <p className="text-3xl font-bold text-green-400">{application.match_score ?? "—"}</p>
           </div>
           <Target className="w-10 h-10 text-green-500/20" />
         </div>
@@ -328,15 +226,15 @@ export default function SlayDetailPage() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column - Resume View (2/3 width) */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center space-x-2 border-b border-gray-800">
             <button
               onClick={() => setActiveTab('optimized')}
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'optimized' 
-                  ? 'border-blue-500 text-blue-400' 
+                activeTab === 'optimized'
+                  ? 'border-blue-500 text-blue-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -345,8 +243,8 @@ export default function SlayDetailPage() {
             <button
               onClick={() => setActiveTab('coverLetter')}
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                  activeTab === 'coverLetter' 
-                  ? 'border-purple-500 text-purple-400' 
+                  activeTab === 'coverLetter'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -375,7 +273,7 @@ export default function SlayDetailPage() {
                     <p className="text-gray-500 text-center text-sm max-w-sm">
                       We haven't generated a cover letter for this optimized resume yet.
                     </p>
-                    <button 
+                    <button
                       onClick={handleGenerateCoverLetter}
                       className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-purple-500/20"
                     >
@@ -385,8 +283,8 @@ export default function SlayDetailPage() {
                 )}
               </div>
             ) : activeTab === 'optimized' ? (
-              <div 
-                id="resume-content" 
+              <div
+                id="resume-content"
                 className={styleMaps[activeTemplate].parent}
               >
                 {parsedResume ? (
@@ -450,71 +348,39 @@ export default function SlayDetailPage() {
           </div>
         </div>
 
-        {/* Right Column - Stats & RoadMap (1/3 width) */}
+        {/* Right Column - Stats & Analysis (1/3 width) */}
         <div className="space-y-6">
-          {slay.trapsFixed && (
+          {analysis && analysis.tailoring_recommendations.length > 0 && (
             <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
               <div className="flex items-center mb-4">
                 <CheckCircle2 className="w-5 h-5 text-green-400 mr-2" />
-                <h3 className="font-semibold text-white">Traps Fixed</h3>
+                <h3 className="font-semibold text-white">Tailoring Recommendations</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-2 list-disc pl-4">
-                {(() => {
-                  try {
-                    let parsed: string[] = [];
-                    if (typeof slay.trapsFixed === 'string') {
-                      parsed = JSON.parse(slay.trapsFixed);
-                      if (Array.isArray(parsed)) {
-                        return parsed.map((trap: string, i: number) => <li key={i}>{trap}</li>);
-                      }
-                    } else if (Array.isArray(slay.trapsFixed)) {
-                      return slay.trapsFixed.map((trap: string, i: number) => <li key={i}>{trap}</li>);
-                    }
-                  } catch {
-                    if (typeof slay.trapsFixed === 'string') {
-                      return slay.trapsFixed.split(',').map((t, i) => <li key={i}>{t.replace(/[\[\]"]/g, '').trim()}</li>);
-                    }
-                  }
-                  return <li>{slay.trapsFixed}</li>;
-                })()}
+                {analysis.tailoring_recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
               </ul>
             </div>
           )}
 
-          {(roadmapText || roadmapFocus.length > 0) && (
+          {analysis && analysis.skill_gaps.length > 0 && (
              <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
                  <div className="flex items-center mb-4">
-                   <Target className="w-5 h-5 text-orange-400 mr-2" />
-                   <h3 className="font-semibold text-white">Goals</h3>
+                   <AlertTriangle className="w-5 h-5 text-orange-400 mr-2" />
+                   <h3 className="font-semibold text-white">Skill Gaps</h3>
                  </div>
-                 {roadmapFocus.length > 0 && (
-                   <div className="mb-4">
-                     <p className="text-[10px] font-black uppercase tracking-widest text-orange-300/80 mb-2">Focus Areas</p>
-                     <ul className="space-y-2 text-sm text-gray-300 list-disc pl-4">
-                       {roadmapFocus.map((item, index) => (
-                         <li key={index}>{item}</li>
-                       ))}
-                     </ul>
-                   </div>
-                 )}
-                 {roadmapText && (
-                   <div className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-4">
-                     {roadmapText}
-                   </div>
-                 )}
+                 <ul className="space-y-2 text-sm text-gray-300 list-disc pl-4">
+                   {analysis.skill_gaps.map((gap, i) => <li key={i}>{gap}</li>)}
+                 </ul>
              </div>
           )}
 
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center mb-4">
               <Palette className="w-5 h-5 text-pink-400 mr-2" />
-              <h3 className="font-semibold text-white">Resume Template
-                <span className="ml-2 text-xs text-green-400 font-normal"> (coming soon)</span>
-              </h3>
+              <h3 className="font-semibold text-white">Resume Template</h3>
             </div>
             <div className="space-y-3">
-              <select 
-                disabled
+              <select
                 value={activeTemplate}
                 onChange={(e) => setActiveTemplate(e.target.value as any)}
                 className="w-full bg-[#131315] border border-gray-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-pink-500/50 outline-none transition-all"
@@ -529,32 +395,29 @@ export default function SlayDetailPage() {
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center mb-4">
               <Briefcase className="w-5 h-5 text-blue-400 mr-2" />
-              <h3 className="font-semibold text-white">Quick Actions
-                  <span className="ml-2 text-xs text-green-400 font-normal"> (coming soon)</span>
-              </h3>
+              <h3 className="font-semibold text-white">Quick Actions</h3>
             </div>
             <div className="space-y-3">
-              <button 
+              <button
                 onClick={handleDownloadPdf}
-               disabled
-                // disabled={activeTab !== 'optimized' || !slay.optimizedResume}
+                disabled={activeTab !== 'optimized' || !application.generated_content}
                 className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex justify-center items-center mb-3"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => {
                   let text = "";
-                  if (activeTab === 'optimized') text = slay.optimizedResume;
+                  if (activeTab === 'optimized') text = application.generated_content;
                   else if (activeTab === 'coverLetter') text = coverLetter || "";
-                  
+
                   if (!text) {
                      alert("Nothing to copy!");
                      return;
                   }
-                  
+
                   navigator.clipboard.writeText(text);
                   alert("Copied to clipboard!");
                 }}
@@ -563,9 +426,9 @@ export default function SlayDetailPage() {
                 <FileText className="w-4 h-4 mr-2" />
                 Copy {activeTab === 'optimized' ? 'Optimized' : 'Cover Letter'}
               </button>
-              
+
               {activeTab === 'coverLetter' && coverLetter && (
-                <button 
+                <button
                   onClick={handleGenerateCoverLetter}
                   disabled={generatingCL}
                   className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex justify-center items-center mt-3"
