@@ -22,6 +22,37 @@ export interface JobMatchAnalysis {
   tailoring_recommendations: string[];
   overall_verdict: string;
   confidence_level: string;
+  preference_alignment?: string;
+  hard_constraints?: string[];
+}
+
+export interface MatchResult {
+  id: string;
+  job_posting_id: string;
+  matcher_version: string;
+  match_score: number;
+  confidence_level: string;
+  preference_alignment: string;
+  skill_gaps: string[];
+  hard_constraints: string[];
+  created_at: string;
+  strong_matches?: string[];
+  tailoring_recommendations?: string[];
+  sources?: Array<{ type: string; title: string }>;
+}
+
+export interface JobPosting {
+  id: string;
+  title: string;
+  company: string | null;
+  location: string | null;
+  description: string;
+  source_url: string | null;
+  source_type: string;
+  discovered_at: string;
+  expires_at: string | null;
+  is_expired: boolean;
+  latest_match_score: number | null;
 }
 
 export interface Application {
@@ -68,6 +99,8 @@ export interface CareerSummary {
     href: string;
     priority: "urgent" | "ready" | "build";
   }>;
+  preferences: CareerPreferences;
+  target_roles: TargetRole[];
 }
 
 export interface ResumeVersion {

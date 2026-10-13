@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Send,
   BarChart3,
+  BriefcaseBusiness,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -52,6 +53,7 @@ export function Sidebar({ isMobileOpen, onCloseMobile }: SidebarProps) {
         { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { name: "Slay Mode", href: "/dashboard/workspace", icon: Zap, highlight: true },
         { name: "Skill Roadmap", href: "/dashboard/roadmap", icon: Map },
+        { name: "Opportunities", href: "/dashboard/opportunities", icon: BriefcaseBusiness },
       ]
     },
     {

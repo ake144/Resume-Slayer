@@ -6,6 +6,8 @@ import type {
   ApplicationType,
   CareerEvidence,
   CareerPreferences,
+  MatchResult,
+  JobPosting,
   CareerSummary,
   EducationEntry,
   ResumeVersion,
@@ -101,7 +103,13 @@ export const api = {
   // Jobs
   ingestJob: (body: { job_text: string; title: string; company?: string; location?: string; source_url?: string }) =>
     client.post("/jobs/ingest", body).then(unwrap<JobIngestionResult>),
-  matchJob: (body: { job_text: string; job_title: string }) => client.post("/jobs/match", body).then(unwrap<unknown>),
+  matchJob: (body: { job_text: string; job_title: string; job_posting_id?: string }) =>
+    client.post("/jobs/match", body).then(unwrap<MatchResult>),
+  listMatches: (jobPostingId?: string) =>
+    client.get("/jobs/matches", { params: jobPostingId ? { job_posting_id: jobPostingId } : undefined }).then(unwrap<MatchResult[]>),
+  getMatch: (id: string) => client.get(`/jobs/matches/${id}`).then(unwrap<MatchResult>),
+  listJobPostings: (includeExpired = false) =>
+    client.get(`/jobs/postings?include_expired=${includeExpired}`).then(unwrap<JobPosting[]>),
 
   // Applications
   generateApplication: (body: {
