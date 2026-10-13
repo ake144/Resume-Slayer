@@ -307,6 +307,101 @@ function ResumeVersionsSection() {
     );
 }
 
+function EvidenceSection() {
+    const [entries, setEntries] = useState<Awaited<ReturnType<typeof api.listEvidence>>>([]);
+    const [loading, setLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ evidence_type: "accomplishment", title: "", description: "", verified: false });
+
+    const load = () => api.listEvidence().then(setEntries).catch(console.error).finally(() => setLoading(false));
+    useEffect(() => { load(); }, []);
+
+    const handleAdd = async () => {
+        if (!form.title.trim() || !form.description.trim()) return;
+        await api.createEvidence({
+            ...form,
+            title: form.title.trim(),
+            description: form.description.trim(),
+            source: "user_entered",
+            source_resume_version_id: null,
+        });
+        setForm({ evidence_type: "accomplishment", title: "", description: "", verified: false });
+        setShowForm(false);
+        load();
+    };
+
+    return (
+        <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div className="flex items-center gap-3"><Sparkles className="w-5 h-5 text-blue-400" /><div><h2 className="text-lg font-bold text-white">Career evidence</h2><p className="text-xs text-gray-500 mt-1">Add real accomplishments the agent can safely reuse.</p></div></div>
+                <span className="text-xs text-gray-500">{entries.filter((entry) => entry.verified).length} verified</span>
+            </div>
+            {loading ? <p className="text-sm text-gray-500">Loading...</p> : entries.length === 0 ? <p className="text-sm text-gray-500">No evidence added yet.</p> : (
+                <div className="space-y-3">{entries.map((entry) => <div key={entry.id} className="rounded-xl border border-gray-800 bg-[#111] p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-white">{entry.title}</p><p className="mt-1 text-[11px] uppercase tracking-wider text-gray-500">{entry.evidence_type} · {entry.source}</p></div><span className={entry.verified ? "text-xs text-emerald-400" : "text-xs text-amber-400"}>{entry.verified ? "Verified" : "Needs verification"}</span></div><p className="mt-3 text-sm leading-5 text-gray-400">{entry.description}</p><button onClick={() => api.deleteEvidence(entry.id).then(load)} className="mt-3 text-xs text-gray-600 hover:text-red-400">Remove</button></div>)}</div>
+            )}
+            {showForm ? <div className="space-y-3 border-t border-gray-800 pt-4"><div className="grid grid-cols-2 gap-3"><select value={form.evidence_type} onChange={(event) => setForm({ ...form, evidence_type: event.target.value })} className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white"><option value="accomplishment">Accomplishment</option><option value="project">Project</option><option value="certification">Certification</option><option value="portfolio">Portfolio</option></select><input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Evidence title" className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white" /></div><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What did you do? Include measurable results when you can verify them." rows={3} className="w-full bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white resize-none" /><label className="flex items-center gap-2 text-xs text-gray-400"><input type="checkbox" checked={form.verified} onChange={(event) => setForm({ ...form, verified: event.target.checked })} /> I verify this information is accurate</label><div className="flex gap-2"><button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Save evidence</button><button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white text-sm px-4 py-2">Cancel</button></div></div> : <button onClick={() => setShowForm(true)} className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 font-semibold"><Plus className="w-4 h-4" /> Add career evidence</button>}
+        </div>
+    );
+}
+
+function CareerPreferencesSection() {
+    const [preferences, setPreferences] = useState<Awaited<ReturnType<typeof api.getCareerPreferences>> | null>(null);
+    const [roles, setRoles] = useState<Awaited<ReturnType<typeof api.listTargetRoles>>>([]);
+    const [roleName, setRoleName] = useState("");
+    const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        Promise.all([api.getCareerPreferences(), api.listTargetRoles()])
+            .then(([nextPreferences, nextRoles]) => { setPreferences(nextPreferences); setRoles(nextRoles); })
+            .catch(console.error);
+    }, []);
+
+    const toggleValue = (field: "work_modes" | "employment_types", value: string) => {
+        if (!preferences) return;
+        const values = preferences[field] || [];
+        setPreferences({ ...preferences, [field]: values.includes(value) ? values.filter((item) => item !== value) : [...values, value] });
+    };
+
+    const savePreferences = async () => {
+        if (!preferences) return;
+        const next = await api.updateCareerPreferences({
+            work_modes: preferences.work_modes,
+            employment_types: preferences.employment_types,
+            preferred_locations: preferences.preferred_locations,
+            minimum_salary: preferences.minimum_salary,
+            salary_currency: preferences.salary_currency,
+            willing_to_relocate: preferences.willing_to_relocate,
+            visa_sponsorship_required: preferences.visa_sponsorship_required,
+        });
+        setPreferences(next);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+    };
+
+    const addRole = async () => {
+        if (!roleName.trim()) return;
+        const role = await api.createTargetRole({ role_name: roleName.trim(), priority: roles.length + 1 });
+        setRoles([...roles, role]);
+        setRoleName("");
+    };
+
+    if (!preferences) return <div className="rounded-2xl border border-gray-800/50 bg-[#0a0a0c] p-6 text-sm text-gray-500">Loading career preferences...</div>;
+
+    return (
+        <div className="space-y-6">
+            <div className="rounded-2xl border border-gray-800/50 bg-[#0a0a0c] p-6 space-y-5">
+                <div className="border-b border-gray-800 pb-4"><h2 className="text-lg font-bold text-white">Career preferences</h2><p className="mt-1 text-xs text-gray-500">These constraints will guide future job discovery and matching.</p></div>
+                <div><p className="mb-2 text-sm font-medium text-gray-300">Work mode</p><div className="flex flex-wrap gap-2">{["remote", "hybrid", "onsite"].map((value) => <button key={value} onClick={() => toggleValue("work_modes", value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold capitalize ${preferences.work_modes?.includes(value) ? "border-blue-500 bg-blue-500/10 text-blue-300" : "border-gray-700 text-gray-500"}`}>{value}</button>)}</div></div>
+                <div><p className="mb-2 text-sm font-medium text-gray-300">Employment type</p><div className="flex flex-wrap gap-2">{[{ value: "full_time", label: "Full time" }, { value: "part_time", label: "Part time" }, { value: "contract", label: "Contract" }].map((item) => <button key={item.value} onClick={() => toggleValue("employment_types", item.value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${preferences.employment_types?.includes(item.value) ? "border-blue-500 bg-blue-500/10 text-blue-300" : "border-gray-700 text-gray-500"}`}>{item.label}</button>)}</div></div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3"><input value={preferences.preferred_locations?.join(", ") || ""} onChange={(event) => setPreferences({ ...preferences, preferred_locations: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="Preferred locations, comma separated" className="md:col-span-2 rounded-lg border border-gray-700 bg-[#111] px-3 py-2 text-sm text-white" /><input type="number" value={preferences.minimum_salary || ""} onChange={(event) => setPreferences({ ...preferences, minimum_salary: event.target.value ? Number(event.target.value) : null })} placeholder="Minimum salary" className="rounded-lg border border-gray-700 bg-[#111] px-3 py-2 text-sm text-white" /></div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2"><label className="flex items-center gap-2 text-sm text-gray-400"><input type="checkbox" checked={preferences.willing_to_relocate || false} onChange={(event) => setPreferences({ ...preferences, willing_to_relocate: event.target.checked })} /> Willing to relocate</label><label className="flex items-center gap-2 text-sm text-gray-400"><input type="checkbox" checked={preferences.visa_sponsorship_required || false} onChange={(event) => setPreferences({ ...preferences, visa_sponsorship_required: event.target.checked })} /> Visa sponsorship required</label></div>
+                <div className="flex justify-end"><button onClick={savePreferences} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">{saved ? "Saved" : "Save preferences"}</button></div>
+            </div>
+            <div className="rounded-2xl border border-gray-800/50 bg-[#0a0a0c] p-6 space-y-5"><div className="border-b border-gray-800 pb-4"><h2 className="text-lg font-bold text-white">Target roles</h2><p className="mt-1 text-xs text-gray-500">Rank the roles your agent should prioritize.</p></div><div className="flex gap-2"><input value={roleName} onChange={(event) => setRoleName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addRole()} placeholder="e.g. Senior Frontend Engineer" className="flex-1 rounded-lg border border-gray-700 bg-[#111] px-3 py-2 text-sm text-white" /><button onClick={addRole} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Add role</button></div><div className="space-y-2">{roles.map((role, index) => <div key={role.id} className="flex items-center justify-between rounded-lg border border-gray-800 bg-[#111] px-4 py-3"><span className="text-sm text-white"><span className="mr-3 text-xs text-gray-600">{index + 1}</span>{role.role_name}</span><button onClick={() => api.deleteTargetRole(role.id).then(() => setRoles(roles.filter((item) => item.id !== role.id)))} className="text-xs text-gray-600 hover:text-red-400">Remove</button></div>)}</div></div>
+        </div>
+    );
+}
+
 export default function SettingsPage() {
     const router = useRouter();
     const [activeSection, setActiveSection] = useState("profile");
@@ -500,6 +595,8 @@ export default function SettingsPage() {
                             <EducationSection />
                             <SkillsSection />
                             <ResumeVersionsSection />
+                            <EvidenceSection />
+                            <CareerPreferencesSection />
                         </>
                     )}
 

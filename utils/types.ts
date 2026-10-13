@@ -56,6 +56,7 @@ export interface CareerSummary {
     summary: boolean;
     skills: boolean;
     work_history: boolean;
+    verified_evidence: boolean;
   };
   skill_gaps: string[];
   active_applications: number;
@@ -78,6 +79,38 @@ export interface ResumeVersion {
   content_hash: string;
   parser_status: string;
   created_at: string;
+}
+
+export interface CareerEvidence {
+  id: string;
+  evidence_type: string;
+  title: string;
+  description: string;
+  source: string;
+  source_resume_version_id: string | null;
+  verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CareerPreferences {
+  user_id: string;
+  work_modes: string[] | null;
+  employment_types: string[] | null;
+  preferred_locations: string[] | null;
+  minimum_salary: number | null;
+  salary_currency: string | null;
+  willing_to_relocate: boolean | null;
+  visa_sponsorship_required: boolean | null;
+  updated_at: string;
+}
+
+export interface TargetRole {
+  id: string;
+  role_name: string;
+  priority: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserAccount {

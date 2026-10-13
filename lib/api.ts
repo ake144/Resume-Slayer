@@ -4,12 +4,15 @@ import type {
   ApplicationDetail,
   ApplicationListResult,
   ApplicationType,
+  CareerEvidence,
+  CareerPreferences,
   CareerSummary,
   EducationEntry,
   ResumeVersion,
   SkillEntry,
   UserAccount,
   UserProfile,
+  TargetRole,
   WorkHistoryEntry,
 } from "@/utils/types";
 
@@ -73,6 +76,19 @@ export const api = {
   updateSkill: (id: string, body: Partial<Omit<SkillEntry, "id">>) =>
     client.put(`/profile/skills/${id}`, body).then(raw<SkillEntry>),
   deleteSkill: (id: string) => client.delete(`/profile/skills/${id}`),
+  listEvidence: () => client.get("/profile/evidence").then(raw<CareerEvidence[]>),
+  createEvidence: (body: Omit<CareerEvidence, "id" | "created_at" | "updated_at">) =>
+    client.post("/profile/evidence", body).then(raw<CareerEvidence>),
+  updateEvidence: (id: string, body: Partial<Omit<CareerEvidence, "id" | "created_at" | "updated_at">>) =>
+    client.put(`/profile/evidence/${id}`, body).then(raw<CareerEvidence>),
+  deleteEvidence: (id: string) => client.delete(`/profile/evidence/${id}`),
+  getCareerPreferences: () => client.get("/profile/preferences").then(raw<CareerPreferences>),
+  updateCareerPreferences: (body: Partial<Omit<CareerPreferences, "user_id" | "updated_at">>) =>
+    client.put("/profile/preferences", body).then(raw<CareerPreferences>),
+  listTargetRoles: () => client.get("/profile/target-roles").then(raw<TargetRole[]>),
+  createTargetRole: (body: { role_name: string; priority?: number }) =>
+    client.post("/profile/target-roles", body).then(raw<TargetRole>),
+  deleteTargetRole: (id: string) => client.delete(`/profile/target-roles/${id}`),
 
   // Resume
   ingestResume: (formData: FormData) =>

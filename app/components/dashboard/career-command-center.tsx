@@ -58,6 +58,7 @@ export function CareerCommandCenter() {
     { label: "Career summary", complete: summary.profile_readiness.summary },
     { label: "Skills evidence", complete: summary.profile_readiness.skills },
     { label: "Work history", complete: summary.profile_readiness.work_history },
+    { label: "Verified accomplishments", complete: summary.profile_readiness.verified_evidence },
   ] : [];
   const nextGap = summary?.skill_gaps[0] || "Validate a missing requirement from your next target role";
 
