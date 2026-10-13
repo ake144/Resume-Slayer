@@ -55,6 +55,25 @@ export interface JobPosting {
   latest_match_score: number | null;
 }
 
+export interface LocalSourcePreset {
+  provider: string;
+  label: string;
+  region: string;
+  homepage: string;
+  mode: string;
+  notes: string;
+}
+
+export interface JobSource {
+  id: string;
+  provider: string;
+  source_key: string;
+  enabled: boolean;
+  config: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Application {
   id: string;
   job_title: string;

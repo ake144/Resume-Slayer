@@ -16,6 +16,7 @@ export function InputSection() {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [jobURL, setJobURL] = useState("");
+  const [sourceType, setSourceType] = useState("manual_paste");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStep, setSubmitStep] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +79,7 @@ export function InputSection() {
         job_text: jobDescription,
         title: jobTitle,
         source_url: jobURL || undefined,
+        source_type: sourceType,
       });
 
       setSubmitStep("Generating your tailored application...");
@@ -259,6 +261,19 @@ export function InputSection() {
                     value={jobURL}
                     onChange={(e) => setJobURL(e.target.value)}
                   />
+
+                  <select
+                    value={sourceType}
+                    onChange={(e) => setSourceType(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all"
+                  >
+                    <option value="manual_paste">Other / pasted posting</option>
+                    <option value="ethiojobs_manual">Ethiojobs</option>
+                    <option value="hahu_manual">HaHuJobs</option>
+                    <option value="harmee_manual">Harmee Jobs</option>
+                    <option value="linkedin_manual">LinkedIn Jobs</option>
+                    <option value="telegram_manual">Telegram channel</option>
+                  </select>
 
                   <textarea
                     className="w-full h-40 bg-black/50 border border-white/10 rounded-3xl p-6 text-gray-300 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all resize-none placeholder:text-gray-700"

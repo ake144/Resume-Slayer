@@ -8,6 +8,7 @@ import type {
   CareerPreferences,
   MatchResult,
   JobPosting,
+  JobSource,
   CareerSummary,
   EducationEntry,
   ResumeVersion,
@@ -101,8 +102,16 @@ export const api = {
     client.get(`/resume/versions/${id}/file`, { responseType: "blob" }).then((response) => response.data as Blob),
 
   // Jobs
-  ingestJob: (body: { job_text: string; title: string; company?: string; location?: string; source_url?: string }) =>
+  ingestJob: (body: { job_text: string; title: string; company?: string; location?: string; source_url?: string; source_type?: string; source_id?: string }) =>
     client.post("/jobs/ingest", body).then(unwrap<JobIngestionResult>),
+  listLocalSources: () => client.get("/jobs/local-sources").then(raw<Array<{
+    provider: string;
+    label: string;
+    region: string;
+    homepage: string;
+    mode: string;
+    notes: string;
+  }>>),
   matchJob: (body: { job_text: string; job_title: string; job_posting_id?: string }) =>
     client.post("/jobs/match", body).then(unwrap<MatchResult>),
   listMatches: (jobPostingId?: string) =>
@@ -110,6 +119,11 @@ export const api = {
   getMatch: (id: string) => client.get(`/jobs/matches/${id}`).then(unwrap<MatchResult>),
   listJobPostings: (includeExpired = false) =>
     client.get(`/jobs/postings?include_expired=${includeExpired}`).then(unwrap<JobPosting[]>),
+  listJobSources: () => client.get("/jobs/sources").then(unwrap<JobSource[]>),
+  createJobSource: (body: { provider: string; source_key: string; enabled?: boolean; config?: Record<string, unknown> }) =>
+    client.post("/jobs/sources", body).then(unwrap<JobSource>),
+  discoverJobSource: (id: string) =>
+    client.post(`/jobs/sources/${id}/discover`).then(unwrap<{ source_id: string; provider: string; jobs_seen: number; created: number; updated: number }>),
 
   // Applications
   generateApplication: (body: {
