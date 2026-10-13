@@ -48,6 +48,38 @@ export interface ApplicationListResult {
   totalPages: number;
 }
 
+export interface CareerSummary {
+  display_name: string | null;
+  profile_readiness: {
+    score: number;
+    identity: boolean;
+    summary: boolean;
+    skills: boolean;
+    work_history: boolean;
+  };
+  skill_gaps: string[];
+  active_applications: number;
+  average_match_score: number | null;
+  recent_applications: Application[];
+  next_actions: Array<{
+    title: string;
+    description: string;
+    href: string;
+    priority: "urgent" | "ready" | "build";
+  }>;
+}
+
+export interface ResumeVersion {
+  id: string;
+  title: string;
+  filename: string | null;
+  content_type: string | null;
+  extracted_text: string;
+  content_hash: string;
+  parser_status: string;
+  created_at: string;
+}
+
 export interface UserAccount {
   id: string;
   email: string;

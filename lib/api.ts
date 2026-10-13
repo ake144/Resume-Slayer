@@ -4,7 +4,9 @@ import type {
   ApplicationDetail,
   ApplicationListResult,
   ApplicationType,
+  CareerSummary,
   EducationEntry,
+  ResumeVersion,
   SkillEntry,
   UserAccount,
   UserProfile,
@@ -75,6 +77,10 @@ export const api = {
   // Resume
   ingestResume: (formData: FormData) =>
     client.post("/resume/ingest", formData).then(unwrap<{ status: string; chunks_ingested: number }>),
+  
+  listResumeVersions: () => client.get("/resume/versions").then(raw<ResumeVersion[]>),
+  downloadResumeVersion: (id: string) =>
+    client.get(`/resume/versions/${id}/file`, { responseType: "blob" }).then((response) => response.data as Blob),
 
   // Jobs
   ingestJob: (body: { job_text: string; title: string; company?: string; location?: string; source_url?: string }) =>
@@ -98,4 +104,7 @@ export const api = {
   listApplications: (page = 0, size = 10) =>
     client.get(`/applications?page=${page}&size=${size}`).then(unwrap<ApplicationListResult>),
   getApplication: (id: string) => client.get(`/applications/${id}`).then(unwrap<ApplicationDetail>),
+
+  // Career agent
+  getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),
 };

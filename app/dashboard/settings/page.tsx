@@ -20,6 +20,8 @@ import {
     Briefcase,
     GraduationCap,
     Sparkles,
+    FileArchive,
+    Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LucideIcon } from "lucide-react";
@@ -242,6 +244,69 @@ function SkillsSection() {
     );
 }
 
+function ResumeVersionsSection() {
+    const [versions, setVersions] = useState<Awaited<ReturnType<typeof api.listResumeVersions>>>([]);
+    const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState<string | null>(null);
+
+    useEffect(() => {
+        api.listResumeVersions().then(setVersions).catch(console.error).finally(() => setLoading(false));
+    }, []);
+
+    const handleDownload = async (id: string, filename: string | null, title: string) => {
+        setDownloading(id);
+        try {
+            const blob = await api.downloadResumeVersion(id);
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename || `${title}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setDownloading(null);
+        }
+    };
+
+    return (
+        <div className="bg-[#0a0a0c] border border-gray-800/50 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center gap-3 border-b border-gray-800 pb-4">
+                <FileArchive className="w-5 h-5 text-blue-400" />
+                <div>
+                    <h2 className="text-lg font-bold text-white">Resume versions</h2>
+                    <p className="text-xs text-gray-500 mt-1">Every uploaded resume remains available as career evidence.</p>
+                </div>
+            </div>
+            {loading ? <p className="text-sm text-gray-500">Loading...</p> : versions.length === 0 ? (
+                <p className="text-sm text-gray-500">No versioned resumes yet. Upload one from Slay Mode.</p>
+            ) : (
+                <div className="space-y-3">
+                    {versions.map((version) => (
+                        <div key={version.id} className="flex items-center justify-between gap-4 rounded-xl border border-gray-800 bg-[#111] p-4">
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-white">{version.title}</p>
+                                <p className="mt-1 text-xs text-gray-500">{version.filename || "Text resume"} · {new Date(version.created_at).toLocaleDateString()}</p>
+                                <p className="mt-1 text-[11px] text-emerald-400">{version.parser_status} · evidence snapshot</p>
+                            </div>
+                            {version.filename && (
+                                <button
+                                    onClick={() => handleDownload(version.id, version.filename, version.title)}
+                                    disabled={downloading === version.id}
+                                    className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-700 px-3 py-2 text-xs font-semibold text-gray-300 transition hover:border-blue-500 hover:text-white disabled:opacity-50"
+                                >
+                                    <Download className="h-4 w-4" /> {downloading === version.id ? "..." : "Download"}
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function SettingsPage() {
     const router = useRouter();
     const [activeSection, setActiveSection] = useState("profile");
@@ -434,6 +499,7 @@ export default function SettingsPage() {
                             <WorkHistorySection />
                             <EducationSection />
                             <SkillsSection />
+                            <ResumeVersionsSection />
                         </>
                     )}
 
