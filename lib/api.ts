@@ -123,7 +123,9 @@ export const api = {
   createJobSource: (body: { provider: string; source_key: string; enabled?: boolean; config?: Record<string, unknown> }) =>
     client.post("/jobs/sources", body).then(unwrap<JobSource>),
   discoverJobSource: (id: string) =>
-    client.post(`/jobs/sources/${id}/discover`).then(unwrap<{ source_id: string; provider: string; jobs_seen: number; created: number; updated: number }>),
+    client.post(`/jobs/sources/${id}/discover`).then(unwrap<{ source_id: string; provider: string; jobs_seen: number; created: number; updated: number; posting_ids: string[] }>),
+  rankJobPostings: (body: { posting_ids?: string[]; source_id?: string; limit?: number; refresh?: boolean } = {}) =>
+    client.post("/jobs/postings/rank", body).then(unwrap<{ evaluated: number; skipped: number; failed: number; match_ids: string[] }>),
 
   // Applications
   generateApplication: (body: {
