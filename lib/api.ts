@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { getApiKey } from "@/utils/common";
 import type {
   ApplicationDetail,
+  ApplicationArtifact,
   ApplicationListResult,
   ApplicationType,
   CareerEvidence,
@@ -21,7 +22,7 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-export const client = axios.create({ baseURL: `${API_BASE_URL}/api/v1` });
+export const client = axios.create({ baseURL: `${API_BASE_URL}/api/v1`, withCredentials: true });
 
 client.interceptors.request.use((config) => {
   const key = getApiKey();
@@ -144,6 +145,10 @@ export const api = {
   listApplications: (page = 0, size = 10) =>
     client.get(`/applications?page=${page}&size=${size}`).then(unwrap<ApplicationListResult>),
   getApplication: (id: string) => client.get(`/applications/${id}`).then(unwrap<ApplicationDetail>),
+  listApplicationArtifacts: (applicationId: string) => client.get(`/applications/${applicationId}/artifacts`).then(unwrap<ApplicationArtifact[]>),
+  approveArtifact: (id: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/approve`, { review_notes }).then(unwrap<ApplicationArtifact>),
+  rejectArtifact: (id: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/reject`, { review_notes }).then(unwrap<ApplicationArtifact>),
+  reviseArtifact: (id: string, content: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/revisions`, { content, review_notes }).then(unwrap<ApplicationArtifact>),
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),

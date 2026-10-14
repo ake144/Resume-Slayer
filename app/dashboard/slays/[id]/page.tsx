@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { ApplicationDetail } from "@/utils/types";
+import { ApplicationArtifact, ApplicationDetail } from "@/utils/types";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, RefreshCw, Target, Briefcase, FileText, CheckCircle2, Download, Palette, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -20,6 +20,9 @@ export default function SlayDetailPage() {
 
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [generatingCL, setGeneratingCL] = useState(false);
+  const [artifacts, setArtifacts] = useState<ApplicationArtifact[]>([]);
+  const [reviewing, setReviewing] = useState(false);
+  const [revision, setRevision] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -27,8 +30,10 @@ export default function SlayDetailPage() {
     const fetchApplication = async () => {
       setLoading(true);
       try {
-        const detail = await api.getApplication(id);
+        const [detail, nextArtifacts] = await Promise.all([api.getApplication(id), api.listApplicationArtifacts(id)]);
         setApplication(detail);
+        setArtifacts(nextArtifacts);
+        setRevision(nextArtifacts[0]?.content || detail.generated_content);
       } catch (err: any) {
         console.error(err);
         setError(err.response?.status === 404 ? "Slay not found" : "Failed to fetch details");
@@ -39,6 +44,26 @@ export default function SlayDetailPage() {
 
     fetchApplication();
   }, [id]);
+
+  const reviewArtifact = async (action: "approve" | "reject") => {
+    const artifact = artifacts.find((item) => item.state === "needs_review");
+    if (!artifact) return;
+    setReviewing(true);
+    try {
+      const updated = action === "approve" ? await api.approveArtifact(artifact.id) : await api.rejectArtifact(artifact.id);
+      setArtifacts((current) => current.map((item) => item.id === updated.id ? updated : item));
+    } finally { setReviewing(false); }
+  };
+
+  const createRevision = async () => {
+    const artifact = artifacts.find((item) => item.state === "needs_review" || item.state === "rejected");
+    if (!artifact || !revision.trim()) return;
+    setReviewing(true);
+    try {
+      const updated = await api.reviseArtifact(artifact.id, revision.trim());
+      setArtifacts((current) => [updated, ...current.map((item) => item.id === artifact.id ? { ...item, state: "revised" as const } : item)]);
+    } finally { setReviewing(false); }
+  };
 
   const parseResume = (md: string) => {
     const sections = { header: "", summary: "", experience: "", education: "", skills: "", others: [] as string[] };
@@ -350,6 +375,13 @@ export default function SlayDetailPage() {
 
         {/* Right Column - Stats & Analysis (1/3 width) */}
         <div className="space-y-6">
+          {artifacts[0] && <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between"><h3 className="font-semibold text-white">Document review</h3><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${artifacts[0].state === "approved" ? "bg-green-500/10 text-green-300" : "bg-amber-500/10 text-amber-300"}`}>{artifacts[0].state.replace("_", " ")}</span></div>
+            <p className="text-xs leading-5 text-gray-400">This document must be reviewed before it is treated as final. {artifacts[0].evidence_citations.length} source record{artifacts[0].evidence_citations.length === 1 ? "" : "s"} attached.</p>
+            {artifacts[0].unsupported_claims.length > 0 && <p className="text-xs text-amber-300">Review unsupported claims: {artifacts[0].unsupported_claims.join(", ")}</p>}
+            {artifacts[0].state === "needs_review" && <div className="flex gap-2"><button onClick={() => reviewArtifact("approve")} disabled={reviewing} className="flex-1 rounded-lg bg-green-500 px-3 py-2 text-xs font-bold text-black disabled:opacity-50">Approve</button><button onClick={() => reviewArtifact("reject")} disabled={reviewing} className="flex-1 rounded-lg border border-red-400/40 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-50">Reject</button></div>}
+            {(artifacts[0].state === "needs_review" || artifacts[0].state === "rejected") && <><textarea value={revision} onChange={(event) => setRevision(event.target.value)} className="min-h-24 w-full rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-white" aria-label="Revised document content" /><button onClick={createRevision} disabled={reviewing || !revision.trim()} className="w-full rounded-lg border border-blue-400/40 px-3 py-2 text-xs font-bold text-blue-300 disabled:opacity-50">Save as new revision</button></>}
+          </div>}
           {analysis && analysis.tailoring_recommendations.length > 0 && (
             <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5">
               <div className="flex items-center mb-4">

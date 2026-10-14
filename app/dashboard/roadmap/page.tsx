@@ -13,23 +13,16 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { JobMatchAnalysis } from "@/utils/types";
+import { CareerSummary } from "@/utils/types";
 
 export default function RoadmapPage() {
-  const [analysis, setAnalysis] = useState<JobMatchAnalysis | null>(null);
-  const [jobTitle, setJobTitle] = useState<string | null>(null);
+  const [summary, setSummary] = useState<CareerSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRoadmap = async () => {
       try {
-        const list = await api.listApplications(0, 1);
-        const latest = list.content?.[0];
-        if (latest) {
-          const detail = await api.getApplication(latest.id);
-          setAnalysis(detail.match_analysis);
-          setJobTitle(detail.job_title);
-        }
+        setSummary(await api.getCareerSummary());
       } catch (e) {
         console.error(e);
       } finally {
@@ -62,9 +55,7 @@ export default function RoadmapPage() {
           >
             Skill Roadmap<span className="text-orange-600">.</span>
           </motion.h1>
-          {jobTitle && (
-            <p className="text-gray-500 font-medium">Based on your most recent slay: <span className="text-white">{jobTitle}</span></p>
-          )}
+          <p className="text-gray-500 font-medium">Built from {summary?.durable_match_count ?? 0} saved opportunity match{summary?.durable_match_count === 1 ? "" : "es"}, not only applications you generated.</p>
         </div>
       </div>
 
@@ -72,7 +63,7 @@ export default function RoadmapPage() {
         <div className="flex items-center justify-center py-40">
           <RefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
         </div>
-      ) : !analysis ? (
+      ) : !summary || summary.durable_match_count === 0 ? (
         <div className="bg-[#0a0a0c] border border-white/5 rounded-[2.5rem] p-16 text-center space-y-6">
           <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center border border-white/10 mx-auto">
             <Map className="w-10 h-10 text-gray-700" />
@@ -80,11 +71,11 @@ export default function RoadmapPage() {
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-white">No roadmap yet</h3>
             <p className="text-gray-500 max-w-sm mx-auto">
-              Generate a slay first so we can identify your skill gaps and tailoring recommendations.
+              Discover or analyze a role first so the agent can identify grounded skill gaps and tailoring recommendations.
             </p>
           </div>
           <Link href="/dashboard/workspace" className="inline-block bg-white text-black font-black px-8 py-3 rounded-xl transition-all hover:bg-gray-200">
-            Start Slaying
+            Analyze a role
           </Link>
         </div>
       ) : (
@@ -96,10 +87,10 @@ export default function RoadmapPage() {
               <Zap className="w-5 h-5 text-orange-500" />
               Tailoring Recommendations
             </h3>
-            {analysis.tailoring_recommendations.length === 0 ? (
+            {summary.tailoring_recommendations.length === 0 ? (
               <p className="text-gray-500">No specific recommendations - your resume is well-aligned with this role.</p>
             ) : (
-              analysis.tailoring_recommendations.map((rec, i) => (
+              summary.tailoring_recommendations.map((rec, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
@@ -127,17 +118,17 @@ export default function RoadmapPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black leading-tight">Match Score</h3>
-                  <p className="text-orange-100/80 text-sm leading-relaxed">{analysis.overall_verdict}</p>
+                  <p className="text-orange-100/80 text-sm leading-relaxed">Average compatibility across saved opportunity evaluations.</p>
                 </div>
                 <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                   <div className="text-center">
-                    <p className="text-2xl font-black">{analysis.match_score}%</p>
-                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Current</p>
+                    <p className="text-2xl font-black">{summary.average_match_score ?? "—"}{summary.average_match_score !== null ? "%" : ""}</p>
+                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Average</p>
                   </div>
                   <ArrowRight className="w-8 h-8 opacity-40" />
                   <div className="text-center">
-                    <p className="text-2xl font-black">{analysis.confidence_level}</p>
-                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Confidence</p>
+                    <p className="text-2xl font-black">{summary.durable_match_count}</p>
+                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-bold">Evaluated</p>
                   </div>
                 </div>
               </div>
@@ -148,11 +139,11 @@ export default function RoadmapPage() {
                 <AlertTriangle className="w-4 h-4 text-yellow-500" />
                 Skill Gaps
               </h3>
-              {analysis.skill_gaps.length === 0 ? (
+              {summary.skill_gaps.length === 0 ? (
                 <p className="text-sm text-gray-500">No significant gaps identified.</p>
               ) : (
                 <div className="space-y-3">
-                  {analysis.skill_gaps.map((gap, i) => (
+                  {summary.skill_gaps.map((gap, i) => (
                     <div key={i} className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
                       <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-gray-300">{gap}</p>
@@ -168,7 +159,7 @@ export default function RoadmapPage() {
                 Strong Matches
               </div>
               <ul className="space-y-2">
-                {analysis.strong_matches.map((match, i) => (
+                {summary.strong_matches.map((match, i) => (
                   <li key={i} className="text-sm text-gray-400 leading-relaxed">{match}</li>
                 ))}
               </ul>

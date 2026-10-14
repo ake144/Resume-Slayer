@@ -92,6 +92,20 @@ export interface ApplicationDetail extends Application {
   submitted_at: string | null;
 }
 
+export interface ApplicationArtifact {
+  id: string;
+  application_id: string;
+  parent_artifact_id: string | null;
+  artifact_type: string;
+  state: "draft" | "needs_review" | "approved" | "rejected" | "revised";
+  content: string;
+  evidence_citations: Array<{ type?: string; title?: string }>;
+  unsupported_claims: string[];
+  review_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
 export interface ApplicationListResult {
   content: Application[];
   totalItems: number;
@@ -109,6 +123,9 @@ export interface CareerSummary {
     verified_evidence: boolean;
   };
   skill_gaps: string[];
+  strong_matches: string[];
+  tailoring_recommendations: string[];
+  durable_match_count: number;
   active_applications: number;
   average_match_score: number | null;
   recent_applications: Application[];
