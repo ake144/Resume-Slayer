@@ -125,6 +125,8 @@ export interface ApplicationTask {
   created_at: string;
 }
 
+export interface ApplicationContact { id: string; application_id: string; name: string; email: string | null; role: string | null; notes: string | null; created_at: string; }
+
 export interface ApplicationListResult {
   content: Application[];
   totalItems: number;

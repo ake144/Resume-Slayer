@@ -5,6 +5,7 @@ import type {
   ApplicationArtifact,
   ApplicationEvent,
   ApplicationTask,
+  ApplicationContact,
   ApplicationListResult,
   ApplicationType,
   CareerEvidence,
@@ -144,8 +145,8 @@ export const api = {
     client
       .post("/applications/workflow", body)
       .then(unwrap<{ id: string; application: string; critique: string; final_output: Record<string, unknown> }>),
-  listApplications: (page = 0, size = 10) =>
-    client.get(`/applications?page=${page}&size=${size}`).then(unwrap<ApplicationListResult>),
+  listApplications: (page = 0, size = 10, status_filter?: import("@/utils/types").ApplicationStatus, sort = "newest") =>
+    client.get("/applications", { params: { page, size, status_filter, sort } }).then(unwrap<ApplicationListResult>),
   getApplication: (id: string) => client.get(`/applications/${id}`).then(unwrap<ApplicationDetail>),
   listApplicationArtifacts: (applicationId: string) => client.get(`/applications/${applicationId}/artifacts`).then(unwrap<ApplicationArtifact[]>),
   approveArtifact: (id: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/approve`, { review_notes }).then(unwrap<ApplicationArtifact>),
@@ -156,6 +157,8 @@ export const api = {
   listApplicationTasks: (id: string) => client.get(`/applications/${id}/tasks`).then(unwrap<ApplicationTask[]>),
   createApplicationTask: (id: string, body: { title: string; note?: string; due_at?: string }) => client.post(`/applications/${id}/tasks`, body).then(unwrap<ApplicationTask>),
   completeApplicationTask: (id: string) => client.post(`/applications/tasks/${id}/complete`).then(unwrap<ApplicationTask>),
+  listApplicationContacts: (id: string) => client.get(`/applications/${id}/contacts`).then(unwrap<ApplicationContact[]>),
+  createApplicationContact: (id: string, body: { name: string; email?: string; role?: string; notes?: string }) => client.post(`/applications/${id}/contacts`, body).then(unwrap<ApplicationContact>),
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),

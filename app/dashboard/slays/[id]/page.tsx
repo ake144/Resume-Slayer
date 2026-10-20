@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { ApplicationArtifact, ApplicationDetail, ApplicationEvent, ApplicationStatus, ApplicationTask } from "@/utils/types";
+import { ApplicationArtifact, ApplicationContact, ApplicationDetail, ApplicationEvent, ApplicationStatus, ApplicationTask } from "@/utils/types";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, RefreshCw, Target, Briefcase, FileText, CheckCircle2, Download, Palette, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -27,6 +27,8 @@ export default function SlayDetailPage() {
   const [nextStatus, setNextStatus] = useState<ApplicationStatus | "">("");
   const [tasks, setTasks] = useState<ApplicationTask[]>([]);
   const [taskTitle, setTaskTitle] = useState("");
+  const [contacts, setContacts] = useState<ApplicationContact[]>([]);
+  const [contactName, setContactName] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -34,11 +36,12 @@ export default function SlayDetailPage() {
     const fetchApplication = async () => {
       setLoading(true);
       try {
-        const [detail, nextArtifacts, nextEvents, nextTasks] = await Promise.all([api.getApplication(id), api.listApplicationArtifacts(id), api.listApplicationEvents(id), api.listApplicationTasks(id)]);
+        const [detail, nextArtifacts, nextEvents, nextTasks, nextContacts] = await Promise.all([api.getApplication(id), api.listApplicationArtifacts(id), api.listApplicationEvents(id), api.listApplicationTasks(id), api.listApplicationContacts(id)]);
         setApplication(detail);
         setArtifacts(nextArtifacts);
         setEvents(nextEvents);
         setTasks(nextTasks);
+        setContacts(nextContacts);
         setRevision(nextArtifacts[0]?.content || detail.generated_content);
       } catch (err: any) {
         console.error(err);
@@ -76,6 +79,11 @@ export default function SlayDetailPage() {
     const task = await api.completeApplicationTask(taskId);
     setTasks((current) => current.map((item) => item.id === task.id ? task : item));
     if (application) setEvents(await api.listApplicationEvents(application.id));
+  };
+  const addContact = async () => {
+    if (!application || !contactName.trim()) return;
+    const contact = await api.createApplicationContact(application.id, { name: contactName.trim() });
+    setContacts((current) => [contact, ...current]); setContactName("");
   };
 
   const createRevision = async () => {
@@ -400,6 +408,7 @@ export default function SlayDetailPage() {
         <div className="space-y-6">
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5 space-y-3"><h3 className="font-semibold text-white">Application pipeline</h3><p className="text-xs text-gray-400">Current: <span className="text-white font-bold">{application.status}</span></p><div className="flex gap-2"><select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ApplicationStatus)} className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-white"><option value="">Move to…</option>{["submitted", "interviewing", "offer", "rejected", "withdrawn"].map((value) => <option key={value} value={value}>{value}</option>)}</select><button onClick={updatePipeline} disabled={!nextStatus} className="rounded-lg bg-blue-500 px-3 text-xs font-bold text-white disabled:opacity-50">Update</button></div>{events.slice(0, 3).map((event) => <p key={event.id} className="text-xs text-gray-500">{event.from_status} → {event.to_status} · {new Date(event.created_at).toLocaleDateString()}</p>)}</div>
           <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5 space-y-3"><h3 className="font-semibold text-white">Next actions</h3><div className="flex gap-2"><input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addTask()} placeholder="e.g. Follow up with recruiter" className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-white" /><button onClick={addTask} disabled={!taskTitle.trim()} className="rounded-lg border border-blue-400/40 px-3 text-xs font-bold text-blue-300 disabled:opacity-50">Add</button></div>{tasks.length === 0 ? <p className="text-xs text-gray-500">No follow-ups yet.</p> : tasks.map((task) => <div key={task.id} className="flex items-center justify-between gap-2 text-xs"><span className={task.completed_at ? "text-gray-600 line-through" : "text-gray-300"}>{task.title}</span>{task.completed_at ? <span className="text-green-400">Done</span> : <button onClick={() => completeTask(task.id)} className="text-blue-300 hover:text-white">Complete</button>}</div>)}</div>
+          <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5 space-y-3"><h3 className="font-semibold text-white">Contacts</h3><div className="flex gap-2"><input value={contactName} onChange={(event) => setContactName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addContact()} placeholder="Recruiter or hiring manager" className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-white"/><button onClick={addContact} disabled={!contactName.trim()} className="rounded-lg border border-blue-400/40 px-3 text-xs font-bold text-blue-300 disabled:opacity-50">Add</button></div>{contacts.length === 0 ? <p className="text-xs text-gray-500">No contacts saved.</p> : contacts.map((contact) => <p key={contact.id} className="text-xs text-gray-300">{contact.name}{contact.role ? ` · ${contact.role}` : ""}</p>)}</div>
           {artifacts[0] && <div className="bg-[#0a0a0c] border border-gray-800 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between"><h3 className="font-semibold text-white">Document review</h3><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${artifacts[0].state === "approved" ? "bg-green-500/10 text-green-300" : "bg-amber-500/10 text-amber-300"}`}>{artifacts[0].state.replace("_", " ")}</span></div>
             <p className="text-xs leading-5 text-gray-400">This document must be reviewed before it is treated as final. {artifacts[0].evidence_citations.length} source record{artifacts[0].evidence_citations.length === 1 ? "" : "s"} attached.</p>

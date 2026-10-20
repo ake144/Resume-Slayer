@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from "react";
-import { Application } from "@/utils/types";
+import { Application, ApplicationStatus } from "@/utils/types";
 import Link from "next/link";
 import {
     History,
@@ -24,12 +24,14 @@ export default function HistoryPage() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(0);
+    const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+    const [sort, setSort] = useState("newest");
     const PAGE_SIZE = 10;
 
     const fetchApplications = useCallback(async (p: number) => {
         setLoading(true);
         try {
-            const data = await api.listApplications(p, PAGE_SIZE);
+            const data = await api.listApplications(p, PAGE_SIZE, statusFilter || undefined, sort);
             setApplications(data.content || []);
             setTotalPages(data.totalPages || 0);
             setTotalItems(data.totalItems || 0);
@@ -38,7 +40,7 @@ export default function HistoryPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [statusFilter, sort]);
 
     useEffect(() => {
         fetchApplications(page);
@@ -69,6 +71,8 @@ export default function HistoryPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as ApplicationStatus | ""); setPage(0); }} className="rounded-xl border border-white/10 bg-[#0a0a0c] px-3 py-2.5 text-xs text-gray-300"><option value="">All statuses</option>{["generated", "submitted", "interviewing", "offer", "rejected", "withdrawn"].map((value) => <option key={value} value={value}>{value}</option>)}</select>
+                    <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(0); }} className="rounded-xl border border-white/10 bg-[#0a0a0c] px-3 py-2.5 text-xs text-gray-300"><option value="newest">Newest</option><option value="oldest">Oldest</option></select>
                     <div className="relative hidden md:block">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                         <input

@@ -17,41 +17,16 @@ import {
   Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
+import type { CareerSummary } from "@/utils/types";
 
 export default function AnalysisPage() {
-  const [stats, setStats] = useState({
-    totalSlays: 0,
-    avgScore: 0,
-    topSkills: [] as string[],
-    scoreDistribution: [0, 0, 0, 0], // <60, 60-75, 75-90, >90
-    recentImprovement: "+12%"
-  });
+  const [summary, setSummary] = useState<CareerSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnalysisData = async () => {
       try {
-        const data = await api.listApplications(0, 100);
-        const content = data.content || [];
-
-        const scores = content.map((a) => a.match_score ?? 0);
-        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-
-        const distribution = [0, 0, 0, 0];
-        scores.forEach((s) => {
-          if (s < 60) distribution[0]++;
-          else if (s < 75) distribution[1]++;
-          else if (s < 90) distribution[2]++;
-          else distribution[3]++;
-        });
-
-        setStats({
-          totalSlays: data.totalItems || 0,
-          avgScore: avg,
-          topSkills: ["React", "TypeScript", "Node.js", "AWS", "Docker"], // Mocked for now
-          scoreDistribution: distribution,
-          recentImprovement: "+12%"
-        });
+        setSummary(await api.getCareerSummary());
       } catch (e) {
         console.error(e);
       } finally {
@@ -88,10 +63,10 @@ export default function AnalysisPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Avg Match Score", value: `${stats.avgScore}%`, icon: Target, color: "blue" },
-          { label: "Total Slays", value: stats.totalSlays, icon: Zap, color: "purple" },
-          { label: "Improvement", value: stats.recentImprovement, icon: TrendingUp, color: "green" },
-          { label: "Market Fit", value: "High", icon: Sparkles, color: "orange" }
+          { label: "Avg Match Score", value: summary?.average_match_score === null || !summary ? "—" : `${summary.average_match_score}%`, icon: Target, color: "blue" },
+          { label: "Evaluated Roles", value: summary?.durable_match_count ?? 0, icon: Zap, color: "purple" },
+          { label: "Active Applications", value: summary?.active_applications ?? 0, icon: TrendingUp, color: "green" },
+          { label: "Recurring Gaps", value: summary?.skill_gaps.length ?? 0, icon: Sparkles, color: "orange" }
         ].map((stat, i) => (
           <motion.div
             key={i}
@@ -128,8 +103,8 @@ export default function AnalysisPage() {
 
           <div className="flex items-end justify-between h-64 gap-4 px-4">
             {["< 60%", "60-75%", "75-90%", "> 90%"].map((label, i) => {
-              const count = stats.scoreDistribution[i];
-              const max = Math.max(...stats.scoreDistribution, 1);
+              const count = 0;
+              const max = 1;
               const height = (count / max) * 100;
 
               return (
@@ -165,7 +140,7 @@ export default function AnalysisPage() {
           </h3>
 
           <div className="space-y-4">
-            {stats.topSkills.map((skill, i) => (
+            {(summary?.strong_matches ?? []).map((skill, i) => (
               <div key={i} className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">
                   <span className="text-gray-400">{skill}</span>
@@ -190,7 +165,7 @@ export default function AnalysisPage() {
                 AI Recommendation
               </div>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Your profile is strongest in <span className="text-white font-bold">Frontend Engineering</span>. Focus on adding more <span className="text-white font-bold">Cloud Architecture</span> keywords to increase your match rate for Senior roles.
+                {summary?.tailoring_recommendations[0] || "Evaluate more opportunities to receive evidence-based recommendations."}
               </p>
             </div>
           </div>
@@ -206,7 +181,7 @@ export default function AnalysisPage() {
         <div className="space-y-2 text-center md:text-left">
           <h3 className="text-2xl font-black text-white">Critical Skill Gaps Detected</h3>
           <p className="text-gray-500 max-w-2xl">
-            We've identified 4 recurring skills missing from your optimized resumes that are frequently requested in your target roles. Addressing these could boost your interview rate by up to 30%.
+            {summary?.skill_gaps.length ? `We've identified ${summary.skill_gaps.length} recurring documented skill gaps across your evaluated opportunities.` : "No recurring skill gaps have been recorded yet."}
           </p>
         </div>
         <Link
