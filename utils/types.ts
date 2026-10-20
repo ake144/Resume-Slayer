@@ -106,6 +106,15 @@ export interface ApplicationArtifact {
   created_at: string;
 }
 
+export interface ApplicationEvent {
+  id: string;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  note: string | null;
+  created_at: string;
+}
+
 export interface ApplicationListResult {
   content: Application[];
   totalItems: number;

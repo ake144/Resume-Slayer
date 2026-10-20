@@ -3,6 +3,7 @@ import { getApiKey } from "@/utils/common";
 import type {
   ApplicationDetail,
   ApplicationArtifact,
+  ApplicationEvent,
   ApplicationListResult,
   ApplicationType,
   CareerEvidence,
@@ -149,6 +150,8 @@ export const api = {
   approveArtifact: (id: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/approve`, { review_notes }).then(unwrap<ApplicationArtifact>),
   rejectArtifact: (id: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/reject`, { review_notes }).then(unwrap<ApplicationArtifact>),
   reviseArtifact: (id: string, content: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/revisions`, { content, review_notes }).then(unwrap<ApplicationArtifact>),
+  updateApplicationStatus: (id: string, status: import("@/utils/types").ApplicationStatus, note?: string) => client.post(`/applications/${id}/status`, { status, note }).then(unwrap<ApplicationDetail>),
+  listApplicationEvents: (id: string) => client.get(`/applications/${id}/events`).then(unwrap<ApplicationEvent[]>),
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),
