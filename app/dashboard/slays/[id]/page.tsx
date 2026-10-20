@@ -468,18 +468,22 @@ export default function SlayDetailPage() {
               <button onClick={prepareInterview} className="flex-1 rounded-lg border border-purple-400/40 px-3 py-2 text-xs font-bold text-purple-300 hover:text-white">Prepare new session</button>
               {interviewSession && <button onClick={deletePracticeSession} className="rounded-lg border border-red-400/40 px-3 py-2 text-xs font-bold text-red-300 hover:text-white">Delete</button>}
             </div>
+            {interviewSessions.length > 1 && <select value={interviewSession?.id ?? ""} onChange={(event) => { const session = interviewSessions.find((item) => item.id === event.target.value); if (session) loadInterviewSession(session); }} className="w-full rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-gray-300"><option value="" disabled>Select a saved practice session</option>{interviewSessions.map((session) => <option key={session.id} value={session.id}>{new Date(session.created_at).toLocaleDateString()} · {session.stage}</option>)}</select>}
             {interviewMessage && <p className="text-xs text-gray-400">{interviewMessage}</p>}
             {interviewSession && <div className="space-y-3 border-t border-gray-800 pt-3">
               <p className="text-xs text-gray-500">Session created {new Date(interviewSession.created_at).toLocaleDateString()} · deleting it permanently removes its answer history.</p>
               {interviewSession.question_set.map((question, index) => {
-                const prior = interviewAnswers.find((answer) => answer.question_index === index);
+                const attempts = interviewAnswers.filter((answer) => answer.question_index === index);
+                const prior = attempts.at(-1);
                 const draft = practiceAnswers[index] ?? "";
+                const isEditing = Object.prototype.hasOwnProperty.call(practiceAnswers, index);
                 return <div key={`${interviewSession.id}-${index}`} className="space-y-2">
                   <p className="text-xs text-gray-300">{index + 1}. {question}</p>
-                  {prior ? <p className="text-xs leading-5 text-green-300">Score {prior.rubric_score ?? "—"}/100 · {prior.feedback}</p> : <>
+                  {prior && <><p className="text-xs leading-5 text-green-300">Score {prior.rubric_score ?? "—"}/100 · {prior.feedback}</p><p className="text-[11px] text-gray-500">{attempts.length} saved attempt{attempts.length === 1 ? "" : "s"}</p></>}
+                  {!prior || isEditing ? <>
                     <textarea value={draft} onChange={(event) => setPracticeAnswers((current) => ({ ...current, [index]: event.target.value }))} placeholder="Write your answer…" className="min-h-20 w-full rounded-lg border border-gray-700 bg-[#131315] p-2 text-xs text-white" />
-                    <button onClick={() => savePracticeAnswer(index)} disabled={!draft.trim()} className="text-xs font-bold text-purple-300 disabled:opacity-50">Save and review answer</button>
-                  </>}
+                    <button onClick={() => savePracticeAnswer(index)} disabled={!draft.trim()} className="text-xs font-bold text-purple-300 disabled:opacity-50">{prior ? "Save revised attempt" : "Save and review answer"}</button>
+                  </> : <button onClick={() => setPracticeAnswers((current) => ({ ...current, [index]: "" }))} className="text-xs font-bold text-purple-300">Try another answer</button>}
                 </div>;
               })}
               {interviewSession.improvement_plan.length > 0 && <div className="rounded-lg bg-[#131315] p-3 text-xs text-gray-400"><p className="mb-1 font-bold text-gray-300">Improvement plan</p>{interviewSession.improvement_plan.map((item) => <p key={item}>• {item}</p>)}</div>}
