@@ -62,6 +62,8 @@ export const api = {
   getMe: () => client.get("/users/me").then(raw<UserAccount>),
   requestMagicLink: (email: string) => client.post("/users/magic-link", null, { params: { email } }),
   verifyMagicLink: (token: string) => client.post("/users/magic-link/verify", null, { params: { token } }),
+  logout: () => client.post("/users/logout"),
+  rotateApiKey: () => client.post("/users/api-key/rotate").then(raw<{ api_key: string; rotated_at: string }>),
 
   // Profile
   getProfile: () => client.get("/profile").then(raw<UserProfile>),

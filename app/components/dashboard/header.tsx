@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserInfoStore } from "@/store/userInfo";
 import { clearAuth } from "@/utils/common";
+import { api } from "@/lib/api";
 import { Menu, Search, Bell, ChevronDown, LogOut } from "lucide-react";
 
 type HeaderProps = {
@@ -29,7 +30,8 @@ export function Header({ onMenuClick }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await api.logout(); } catch (error) { console.error("Could not end server session", error); }
     clearAuth();
     setShowProfileMenu(false);
     router.push("/login");
