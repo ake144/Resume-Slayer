@@ -4,6 +4,7 @@ import type {
   ApplicationDetail,
   ApplicationArtifact,
   ApplicationEvent,
+  ApplicationTask,
   ApplicationListResult,
   ApplicationType,
   CareerEvidence,
@@ -152,6 +153,9 @@ export const api = {
   reviseArtifact: (id: string, content: string, review_notes?: string) => client.post(`/applications/artifacts/${id}/revisions`, { content, review_notes }).then(unwrap<ApplicationArtifact>),
   updateApplicationStatus: (id: string, status: import("@/utils/types").ApplicationStatus, note?: string) => client.post(`/applications/${id}/status`, { status, note }).then(unwrap<ApplicationDetail>),
   listApplicationEvents: (id: string) => client.get(`/applications/${id}/events`).then(unwrap<ApplicationEvent[]>),
+  listApplicationTasks: (id: string) => client.get(`/applications/${id}/tasks`).then(unwrap<ApplicationTask[]>),
+  createApplicationTask: (id: string, body: { title: string; note?: string; due_at?: string }) => client.post(`/applications/${id}/tasks`, body).then(unwrap<ApplicationTask>),
+  completeApplicationTask: (id: string) => client.post(`/applications/tasks/${id}/complete`).then(unwrap<ApplicationTask>),
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),

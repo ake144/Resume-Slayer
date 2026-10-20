@@ -115,6 +115,16 @@ export interface ApplicationEvent {
   created_at: string;
 }
 
+export interface ApplicationTask {
+  id: string;
+  application_id: string;
+  title: string;
+  note: string | null;
+  due_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
 export interface ApplicationListResult {
   content: Application[];
   totalItems: number;
