@@ -162,4 +162,5 @@ export const api = {
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),
+  submitFeedback: (body: { subject_type: "match" | "artifact" | "recommendation"; subject_id: string; feedback_type: "useful" | "not_useful" | "correction" | "quality"; rating?: number; comment?: string }) => client.post("/career/feedback", body),
 };

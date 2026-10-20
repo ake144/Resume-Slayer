@@ -21,12 +21,22 @@ import type { CareerSummary } from "@/utils/types";
 
 export default function AnalysisPage() {
   const [summary, setSummary] = useState<CareerSummary | null>(null);
+  const [scoreDistribution, setScoreDistribution] = useState([0, 0, 0, 0]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnalysisData = async () => {
       try {
-        setSummary(await api.getCareerSummary());
+        const [nextSummary, matches] = await Promise.all([api.getCareerSummary(), api.listMatches()]);
+        const distribution = [0, 0, 0, 0];
+        matches.forEach((match) => {
+          if (match.match_score < 60) distribution[0]++;
+          else if (match.match_score < 75) distribution[1]++;
+          else if (match.match_score < 90) distribution[2]++;
+          else distribution[3]++;
+        });
+        setSummary(nextSummary);
+        setScoreDistribution(distribution);
       } catch (e) {
         console.error(e);
       } finally {
@@ -103,8 +113,8 @@ export default function AnalysisPage() {
 
           <div className="flex items-end justify-between h-64 gap-4 px-4">
             {["< 60%", "60-75%", "75-90%", "> 90%"].map((label, i) => {
-              const count = 0;
-              const max = 1;
+              const count = scoreDistribution[i];
+              const max = Math.max(...scoreDistribution, 1);
               const height = (count / max) * 100;
 
               return (
