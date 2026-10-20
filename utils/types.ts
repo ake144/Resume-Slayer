@@ -127,6 +127,9 @@ export interface ApplicationTask {
 
 export interface ApplicationContact { id: string; application_id: string; name: string; email: string | null; role: string | null; notes: string | null; created_at: string; }
 
+export interface InterviewSession { id: string; application_id: string; stage: string; scheduled_at: string | null; question_set: string[]; improvement_plan: string[]; created_at: string; }
+export interface InterviewAnswer { id: string; question_index: number; answer: string; feedback: string | null; rubric_score: number | null; created_at: string; }
+
 export interface ApplicationListResult {
   content: Application[];
   totalItems: number;
@@ -147,6 +150,9 @@ export interface CareerSummary {
   strong_matches: string[];
   tailoring_recommendations: string[];
   durable_match_count: number;
+  feedback_count: number;
+  helpful_feedback_count: number;
+  average_feedback_rating: number | null;
   active_applications: number;
   average_match_score: number | null;
   recent_applications: Application[];

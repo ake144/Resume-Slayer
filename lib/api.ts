@@ -6,6 +6,8 @@ import type {
   ApplicationEvent,
   ApplicationTask,
   ApplicationContact,
+  InterviewSession,
+  InterviewAnswer,
   ApplicationListResult,
   ApplicationType,
   CareerEvidence,
@@ -58,6 +60,8 @@ export const api = {
   register: (email: string, full_name?: string) =>
     client.post("/users", { email, full_name }).then(raw<{ id: string; email: string; api_key: string; created_at: string }>),
   getMe: () => client.get("/users/me").then(raw<UserAccount>),
+  requestMagicLink: (email: string) => client.post("/users/magic-link", null, { params: { email } }),
+  verifyMagicLink: (token: string) => client.post("/users/magic-link/verify", null, { params: { token } }),
 
   // Profile
   getProfile: () => client.get("/profile").then(raw<UserProfile>),
@@ -159,6 +163,11 @@ export const api = {
   completeApplicationTask: (id: string) => client.post(`/applications/tasks/${id}/complete`).then(unwrap<ApplicationTask>),
   listApplicationContacts: (id: string) => client.get(`/applications/${id}/contacts`).then(unwrap<ApplicationContact[]>),
   createApplicationContact: (id: string, body: { name: string; email?: string; role?: string; notes?: string }) => client.post(`/applications/${id}/contacts`, body).then(unwrap<ApplicationContact>),
+  createInterviewSession: (body: { application_id: string; stage?: string; scheduled_at?: string; question_set?: string[] }) => client.post("/interviews/sessions", body).then(unwrap<InterviewSession>),
+  listInterviewSessions: (application_id?: string) => client.get("/interviews/sessions", { params: application_id ? { application_id } : undefined }).then(unwrap<InterviewSession[]>),
+  saveInterviewAnswer: (sessionId: string, body: { question_index: number; answer: string }) => client.post(`/interviews/sessions/${sessionId}/answers`, body).then(unwrap<InterviewAnswer>),
+  listInterviewAnswers: (sessionId: string) => client.get(`/interviews/sessions/${sessionId}/answers`).then(unwrap<InterviewAnswer[]>),
+  deleteInterviewSession: (sessionId: string) => client.delete(`/interviews/sessions/${sessionId}`),
 
   // Career agent
   getCareerSummary: () => client.get("/career/summary").then(raw<CareerSummary>),

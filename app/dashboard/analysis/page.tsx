@@ -76,7 +76,7 @@ export default function AnalysisPage() {
           { label: "Avg Match Score", value: summary?.average_match_score === null || !summary ? "—" : `${summary.average_match_score}%`, icon: Target, color: "blue" },
           { label: "Evaluated Roles", value: summary?.durable_match_count ?? 0, icon: Zap, color: "purple" },
           { label: "Active Applications", value: summary?.active_applications ?? 0, icon: TrendingUp, color: "green" },
-          { label: "Recurring Gaps", value: summary?.skill_gaps.length ?? 0, icon: Sparkles, color: "orange" }
+          { label: "Helpful Reviews", value: summary?.helpful_feedback_count ?? 0, icon: Sparkles, color: "orange" }
         ].map((stat, i) => (
           <motion.div
             key={i}

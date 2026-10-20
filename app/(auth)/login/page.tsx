@@ -5,11 +5,10 @@ import { useState } from "react";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { getApiKey, setApiKey, clearAuth } from "@/utils/common";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,20 +17,12 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    const previousKey = getApiKey();
-    setApiKey(apiKeyInput.trim());
-
     try {
-      await api.getMe();
-      router.push("/dashboard");
+      await api.requestMagicLink(email.trim());
+      setError("Check the development server log for your sign-in link. Email delivery will be connected later.");
     } catch (err) {
       console.error(err);
-      if (previousKey) {
-        setApiKey(previousKey);
-      } else {
-        clearAuth();
-      }
-      setError("Invalid API key. Double-check what you pasted and try again.");
+      setError("Could not request a sign-in link. Try again shortly.");
     } finally {
       setIsLoading(false);
     }
@@ -48,29 +39,29 @@ export default function LoginPage() {
 
       <div className="bg-[#111] border border-gray-800 rounded-2xl p-8 w-full max-w-md shadow-2xl">
         <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-        <p className="text-gray-400 text-sm mb-6">Paste your API key to access your dashboard.</p>
+        <p className="text-gray-400 text-sm mb-6">Enter your email and we&apos;ll send a secure sign-in link.</p>
 
         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">API Key</label>
-            <textarea
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">Email address</label>
+            <input
               required
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              rows={2}
-              className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-gray-600 resize-none"
-              placeholder="rsag_..."
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-gray-600"
+              placeholder="you@example.com"
             />
           </div>
 
           <button
             type="submit"
-            disabled={isLoading || !apiKeyInput.trim()}
+            disabled={isLoading || !email.trim()}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all mt-4"
           >
-            {isLoading ? "Verifying..." : "Log In"}
+            {isLoading ? "Sending..." : "Send sign-in link"}
           </button>
         </form>
 
